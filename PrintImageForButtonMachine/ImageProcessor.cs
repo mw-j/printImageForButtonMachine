@@ -10,6 +10,7 @@ namespace PrintImageForButtonMachine
 {
     internal class ImageProcessor
     {
+        private const double cmProInch = 2.54;
         private string _printPath;
         private string _ueberwachungPfad;
         private string _ausgabePfad;
@@ -19,6 +20,7 @@ namespace PrintImageForButtonMachine
         private int _druckerAuflösung = 96; // dpi
         private Image _vorschauBild = new Bitmap(20, 20);
         private Label _labelAktualisiert;
+        private readonly ComboBox _comboBox;
 
         public string UeberwachungPfad { get => _ueberwachungPfad; set => _ueberwachungPfad = value; }
         public string AusgabePfad { get => _ausgabePfad; set => _ausgabePfad = value; }
@@ -26,13 +28,13 @@ namespace PrintImageForButtonMachine
         public double Groesse { get => _groesse; set => _groesse = value; }
         
         public int DruckerAuflösung { get => _druckerAuflösung; set => _druckerAuflösung = value; }
-        public int BreiteInPixel { get => (int)(21 / 2.54 * _druckerAuflösung); }
-        public int HöheInPixel { get => (int)(29.7 / 2.54 * _druckerAuflösung); }
-        public int GroesseInPixel { get => (int)(_groesse / 2.54 * _druckerAuflösung); }
-        public int AbstandInPixel { get => (int)(0.5 / 2.54 * _druckerAuflösung); }
+        public int BreiteInPixel { get => (int)(21 / cmProInch * _druckerAuflösung); }
+        public int HöheInPixel { get => (int)(29.7 / cmProInch * _druckerAuflösung); }
+        public int GroesseInPixel { get => (int)(_groesse / cmProInch * _druckerAuflösung); }
+        public int AbstandInPixel { get => (int)(0.5 / cmProInch * _druckerAuflösung); }
         public Image VorschauBild { get => _vorschauBild; }
 
-        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert)
+        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
             _ausgabePfad = p_ausgabePfad;
@@ -40,6 +42,7 @@ namespace PrintImageForButtonMachine
             _groesse = p_Groesse;
             _pictureBox = p_PictureBox;
             _labelAktualisiert = labelAktualisiert;
+            _comboBox = comboBox;
         }
 
         public void BearbeiteOrdner()
@@ -50,14 +53,30 @@ namespace PrintImageForButtonMachine
             // verschiebe Dateien in eigenen Ordner
             string ordnerName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
             string ordnerPfad = Path.Combine(_ausgabePfad, ordnerName);
-            if (!Directory.Exists(ordnerPfad))
+            try
             {
-                Directory.CreateDirectory(ordnerPfad);
+                if (!Directory.Exists(ordnerPfad))
+                {
+                    Directory.CreateDirectory(ordnerPfad);
+                }
+                foreach (FileInfo file in files)
+                {
+                    string pfad = Path.Combine(ordnerPfad, file.Name);
+                    file.MoveTo(pfad);
+                }
             }
-            foreach (FileInfo file in files)
-            {
-                string pfad = Path.Combine(ordnerPfad, file.Name);
-                file.MoveTo(pfad);
+            catch {
+                MessageBox.Show("Eine Datei im überwachten Ordner konnte nicht kopiert werden, da sie von einem anderen Programm blockiert wird. Möglicherweise hat das Aufnahmeprogramm noch eine Vorschau geöffnet. ", "Bearbeitung nicht möglich", MessageBoxButtons.OK);
+                // Kopiere breits kopierte Fotos zurück
+                DirectoryInfo dirTarget = new DirectoryInfo(_ueberwachungPfad);
+                FileInfo[] filesTarget = dirTarget.GetFiles("*.jpg");
+                foreach (FileInfo file in filesTarget)
+                {
+                    string pfad = Path.Combine(_ueberwachungPfad, file.Name);
+                    file.MoveTo(pfad);
+                }
+
+                return;
             }
 
             using (Bitmap neuesBild = GeneriereBild(ordnerPfad)) {
@@ -95,7 +114,7 @@ namespace PrintImageForButtonMachine
                 for (int i = 0; i < dateien.Length; i++)
                 {
                     using (Image image = Image.FromFile(dateien[i].FullName)) {
-                        Image imageZugeschnitten = ZuschneidenBild(image, _faktor);
+                        Image imageZugeschnitten = SchneideBildZu(image, _faktor);
                         var imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel);
                         int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
                         int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) * (GroesseInPixel + AbstandInPixel);
@@ -108,23 +127,41 @@ namespace PrintImageForButtonMachine
         }
 
         private void DruckeBild() {
-            var printDocument = new PrintDocument();
-            printDocument.DefaultPageSettings.Landscape = false;
-            printDocument.PrintPage += (sender, args) =>
+            try
             {
-                Image image = Image.FromFile(_printPath);
-                args.Graphics.DrawImage(image, 0, 0, image.Width, image.Height);
-            };
-            printDocument.Print();
+                var printDocument = new PrintDocument();
+                printDocument.PrinterSettings.PrinterName = _comboBox.Text;
+                printDocument.DefaultPageSettings.Landscape = false;
+                printDocument.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+                var a = printDocument.DefaultPageSettings.PrinterResolution;
+
+                printDocument.PrintPage += (sender, args) =>
+                {
+                    using (Image image = Image.FromFile(_printPath))
+                    {
+                        args.Graphics.PageScale = 1;
+                        args.Graphics.DrawImage(image, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, image.Width, image.Height);
+                    }
+                };
+                printDocument.Print();
+            }
+            catch (InvalidPrinterException) {
+                MessageBox.Show("Der angegebene Drucker ist nicht erreichbar. Die Datei liegt im entsprechenden Ausgabeordner und kann manuell gedruckt werden.", "Fehler beim Drucken", MessageBoxButtons.OK);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Es ist ein Fehler beim Drucken aufgetreten. Die Datei liegt im entsprechenden Ausgabeordner und kann manuell gedruckt werden.", "Fehler beim Drucken", MessageBoxButtons.OK);
+            }
+
         }
 
-        private Image ZuschneidenBild(Image p_Bild, double p_Faktor)
+        private Image SchneideBildZu(Image p_Bild, double p_Faktor)
         {
             if (p_Faktor < 0 || p_Faktor > 1) throw new Exception();
 
             var kleinsteKantenlaenge = Math.Min(p_Bild.Width, p_Bild.Height);
             int zielgroesse = (int)(kleinsteKantenlaenge * p_Faktor);
-            Bitmap bild = new Bitmap(p_Bild);
+            using Bitmap bild = new Bitmap(p_Bild);
             Bitmap zugeschnittenesBild = new Bitmap(zielgroesse, zielgroesse);
 
             // Erstellen Sie ein Graphics-Objekt aus dem zugeschnittenen Bild
