@@ -1,10 +1,24 @@
+using PrintImageForButtonMachine;
+using System.Diagnostics;
+using System.Windows.Forms;
+
 namespace WinFormsApp1
 {
     public partial class Form1 : Form
     {
+        private ImageProcessor processor;
+        private ImageWatcher watcher;
+
         public Form1()
         {
             InitializeComponent();
+            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1);
+            watcher = new ImageWatcher(processor);
+            textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
+            textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
+            num_faktor.DataBindings.Add("Value", processor, "Faktor");
+            num_groesse.DataBindings.Add("Value", processor, "Groesse");
+            //pictureBox1.DataBindings.Add("Image", processor, "VorschauBild");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -14,7 +28,35 @@ namespace WinFormsApp1
 
         private void btn_startStop_Click(object sender, EventArgs e)
         {
-            new ImageWatcher(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value);
+            if (watcher.Watcher.EnableRaisingEvents == false)
+            {
+                // Watcher starten
+                watcher.StarteFileSystemWatcher();
+                processor.GeneriereVorschau();
+                DeAktiviereInputs(false);
+
+            }
+            else
+            {
+                // Watcher beenden
+                watcher.StoppeFileSystemWatcher();
+                DeAktiviereInputs(true);
+            }
+
+        }
+
+        private void DeAktiviereInputs(bool wert)
+        {
+            textBox_ueberwachung.Enabled = wert;
+            btn_ueberwachung.Enabled = wert;
+            textBox_ausgabe.Enabled = wert;
+            btn_ausgabe.Enabled = wert;
+            num_faktor.Enabled = wert;
+            num_groesse.Enabled = wert;
+            num_Auflösung.Enabled = wert;
+            label_aktivIcon.Visible = !wert;
+            label_aktivText.Visible = !wert;
+            btn_startStop.Text = wert ? "Überwachung starten" : "Überwachung stoppen";
         }
 
         private void textBox_ueberwachung_TextChanged(object sender, EventArgs e)
@@ -99,6 +141,16 @@ namespace WinFormsApp1
         private void label6_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void btn_print_Click(object sender, EventArgs e)
+        {
+            processor.BearbeiteOrdner();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            processor.GeneriereVorschau();
         }
     }
 }
