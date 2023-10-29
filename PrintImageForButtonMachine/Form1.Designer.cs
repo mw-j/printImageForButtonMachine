@@ -49,6 +49,7 @@
             label5 = new Label();
             pictureBox1 = new PictureBox();
             button1 = new Button();
+            label_Uhrzeit = new Label();
             ((System.ComponentModel.ISupportInitialize)num_faktor).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_Auflösung).BeginInit();
@@ -246,11 +247,22 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
+            // label_Uhrzeit
+            // 
+            label_Uhrzeit.AutoSize = true;
+            label_Uhrzeit.Location = new Point(321, 434);
+            label_Uhrzeit.Name = "label_Uhrzeit";
+            label_Uhrzeit.Size = new Size(145, 15);
+            label_Uhrzeit.TabIndex = 22;
+            label_Uhrzeit.Text = "Zuletzt aktualisiert: --:--:--";
+            label_Uhrzeit.Click += label6_Click_1;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 461);
+            Controls.Add(label_Uhrzeit);
             Controls.Add(button1);
             Controls.Add(pictureBox1);
             Controls.Add(num_Auflösung);
@@ -306,5 +318,6 @@
         private Label label5;
         private PictureBox pictureBox1;
         private Button button1;
+        private Label label_Uhrzeit;
     }
 }
