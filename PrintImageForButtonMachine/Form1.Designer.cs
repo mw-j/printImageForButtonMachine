@@ -50,6 +50,8 @@
             pictureBox1 = new PictureBox();
             button1 = new Button();
             label_Uhrzeit = new Label();
+            comboBox_drucker = new ComboBox();
+            label6 = new Label();
             ((System.ComponentModel.ISupportInitialize)num_faktor).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_Auflösung).BeginInit();
@@ -58,7 +60,7 @@
             // 
             // btn_startStop
             // 
-            btn_startStop.Location = new Point(12, 368);
+            btn_startStop.Location = new Point(12, 385);
             btn_startStop.Name = "btn_startStop";
             btn_startStop.Size = new Size(168, 23);
             btn_startStop.TabIndex = 0;
@@ -125,7 +127,7 @@
             // 
             // btn_print
             // 
-            btn_print.Location = new Point(12, 397);
+            btn_print.Location = new Point(12, 414);
             btn_print.Name = "btn_print";
             btn_print.Size = new Size(168, 23);
             btn_print.TabIndex = 7;
@@ -150,7 +152,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(12, 221);
+            label3.Location = new Point(12, 268);
             label3.Name = "label3";
             label3.Size = new Size(163, 15);
             label3.TabIndex = 11;
@@ -159,7 +161,7 @@
             // 
             // num_faktor
             // 
-            num_faktor.Location = new Point(193, 219);
+            num_faktor.Location = new Point(193, 266);
             num_faktor.Maximum = new decimal(new int[] { 99, 0, 0, 0 });
             num_faktor.Name = "num_faktor";
             num_faktor.Size = new Size(40, 23);
@@ -169,7 +171,7 @@
             // num_groesse
             // 
             num_groesse.DecimalPlaces = 2;
-            num_groesse.Location = new Point(186, 248);
+            num_groesse.Location = new Point(186, 295);
             num_groesse.Maximum = new decimal(new int[] { 999, 0, 0, 131072 });
             num_groesse.Name = "num_groesse";
             num_groesse.Size = new Size(47, 23);
@@ -180,7 +182,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(12, 250);
+            label4.Location = new Point(12, 297);
             label4.Name = "label4";
             label4.Size = new Size(157, 15);
             label4.TabIndex = 13;
@@ -192,7 +194,7 @@
             label_aktivIcon.AutoSize = true;
             label_aktivIcon.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             label_aktivIcon.ForeColor = Color.FromArgb(0, 192, 0);
-            label_aktivIcon.Location = new Point(12, 336);
+            label_aktivIcon.Location = new Point(12, 353);
             label_aktivIcon.Name = "label_aktivIcon";
             label_aktivIcon.Size = new Size(20, 21);
             label_aktivIcon.TabIndex = 16;
@@ -202,7 +204,7 @@
             // label_aktivText
             // 
             label_aktivText.AutoSize = true;
-            label_aktivText.Location = new Point(30, 341);
+            label_aktivText.Location = new Point(30, 358);
             label_aktivText.Name = "label_aktivText";
             label_aktivText.Size = new Size(109, 15);
             label_aktivText.TabIndex = 17;
@@ -212,7 +214,7 @@
             // 
             // num_Auflösung
             // 
-            num_Auflösung.Location = new Point(193, 278);
+            num_Auflösung.Location = new Point(193, 325);
             num_Auflösung.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
             num_Auflösung.Name = "num_Auflösung";
             num_Auflösung.Size = new Size(40, 23);
@@ -222,24 +224,25 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(12, 280);
+            label5.Location = new Point(12, 327);
             label5.Name = "label5";
-            label5.Size = new Size(160, 15);
+            label5.Size = new Size(114, 15);
             label5.TabIndex = 18;
-            label5.Text = "Auflösung des Druckers (dpi)";
+            label5.Text = "Ziel-Auflösung (dpi)";
+            label5.Click += label5_Click_1;
             // 
             // pictureBox1
             // 
-            pictureBox1.Location = new Point(300, 221);
+            pictureBox1.Location = new Point(513, 12);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(172, 228);
+            pictureBox1.Size = new Size(299, 419);
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 20;
             pictureBox1.TabStop = false;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 426);
+            button1.Location = new Point(12, 443);
             button1.Name = "button1";
             button1.Size = new Size(168, 23);
             button1.TabIndex = 21;
@@ -250,18 +253,37 @@
             // label_Uhrzeit
             // 
             label_Uhrzeit.AutoSize = true;
-            label_Uhrzeit.Location = new Point(321, 434);
+            label_Uhrzeit.Location = new Point(513, 434);
             label_Uhrzeit.Name = "label_Uhrzeit";
             label_Uhrzeit.Size = new Size(145, 15);
             label_Uhrzeit.TabIndex = 22;
             label_Uhrzeit.Text = "Zuletzt aktualisiert: --:--:--";
             label_Uhrzeit.Click += label6_Click_1;
             // 
+            // comboBox_drucker
+            // 
+            comboBox_drucker.FormattingEnabled = true;
+            comboBox_drucker.Location = new Point(66, 219);
+            comboBox_drucker.Name = "comboBox_drucker";
+            comboBox_drucker.Size = new Size(310, 23);
+            comboBox_drucker.TabIndex = 23;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(12, 222);
+            label6.Name = "label6";
+            label6.Size = new Size(48, 15);
+            label6.TabIndex = 24;
+            label6.Text = "Drucker";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(484, 461);
+            ClientSize = new Size(823, 535);
+            Controls.Add(label6);
+            Controls.Add(comboBox_drucker);
             Controls.Add(label_Uhrzeit);
             Controls.Add(button1);
             Controls.Add(pictureBox1);
@@ -282,8 +304,7 @@
             Controls.Add(label1);
             Controls.Add(textBox_ueberwachung);
             Controls.Add(btn_startStop);
-            MaximumSize = new Size(500, 500);
-            MinimumSize = new Size(500, 0);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Bilder für Button-Maschine generieren";
@@ -319,5 +340,7 @@
         private PictureBox pictureBox1;
         private Button button1;
         private Label label_Uhrzeit;
+        private ComboBox comboBox_drucker;
+        private Label label6;
     }
 }

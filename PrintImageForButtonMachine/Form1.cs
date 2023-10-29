@@ -1,5 +1,6 @@
 using PrintImageForButtonMachine;
 using System.Diagnostics;
+using System.Drawing.Printing;
 using System.Windows.Forms;
 
 namespace WinFormsApp1
@@ -13,7 +14,7 @@ namespace WinFormsApp1
         public Form1()
         {
             InitializeComponent();
-            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit);
+            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             watcher = new ImageWatcher(processor);
             checker = new ImageChecker(processor);
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
@@ -21,6 +22,13 @@ namespace WinFormsApp1
             num_faktor.DataBindings.Add("Value", processor, "Faktor");
             num_groesse.DataBindings.Add("Value", processor, "Groesse");
             //pictureBox1.DataBindings.Add("Image", processor, "VorschauBild");
+
+            foreach (string printer in PrinterSettings.InstalledPrinters)
+            {
+                comboBox_drucker.Items.Add(printer);
+            }
+            PrintDocument pd = new PrintDocument();
+            comboBox_drucker.Text = pd.PrinterSettings.PrinterName;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -71,6 +79,7 @@ namespace WinFormsApp1
             label_aktivIcon.Visible = !wert;
             label_aktivText.Visible = !wert;
             btn_startStop.Text = wert ? "Überwachung starten" : "Überwachung stoppen";
+            comboBox_drucker.Enabled = wert;
         }
 
         private void textBox_ueberwachung_TextChanged(object sender, EventArgs e)
@@ -168,6 +177,11 @@ namespace WinFormsApp1
         }
 
         private void label6_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label5_Click_1(object sender, EventArgs e)
         {
 
         }
