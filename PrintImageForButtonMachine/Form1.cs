@@ -8,12 +8,14 @@ namespace WinFormsApp1
     {
         private ImageProcessor processor;
         private ImageWatcher watcher;
+        private ImageChecker checker;
 
         public Form1()
         {
             InitializeComponent();
-            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1);
+            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit);
             watcher = new ImageWatcher(processor);
+            checker = new ImageChecker(processor);
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
             textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
             num_faktor.DataBindings.Add("Value", processor, "Faktor");
@@ -28,20 +30,32 @@ namespace WinFormsApp1
 
         private void btn_startStop_Click(object sender, EventArgs e)
         {
-            if (watcher.Watcher.EnableRaisingEvents == false)
+            if (!checker.DoCheck)
             {
-                // Watcher starten
-                watcher.StarteFileSystemWatcher();
-                processor.GeneriereVorschau();
+                checker.startCheck();
                 DeAktiviereInputs(false);
-
             }
             else
             {
-                // Watcher beenden
-                watcher.StoppeFileSystemWatcher();
+                checker.stopCheck();
                 DeAktiviereInputs(true);
             }
+
+
+            //if (watcher.Watcher.EnableRaisingEvents == false)
+            //{
+            //    // Watcher starten
+            //    watcher.StarteFileSystemWatcher();
+            //    processor.GeneriereVorschau();
+            //    DeAktiviereInputs(false);
+
+            //}
+            //else
+            //{
+            //    // Watcher beenden
+            //    watcher.StoppeFileSystemWatcher();
+            //    DeAktiviereInputs(true);
+            //}
 
         }
 
@@ -151,6 +165,11 @@ namespace WinFormsApp1
         private void button1_Click(object sender, EventArgs e)
         {
             processor.GeneriereVorschau();
+        }
+
+        private void label6_Click_1(object sender, EventArgs e)
+        {
+
         }
     }
 }

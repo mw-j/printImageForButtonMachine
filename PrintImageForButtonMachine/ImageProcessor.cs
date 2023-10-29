@@ -18,6 +18,7 @@ namespace PrintImageForButtonMachine
         private PictureBox _pictureBox;
         private int _druckerAuflösung = 96; // dpi
         private Image _vorschauBild = new Bitmap(20, 20);
+        private Label _labelAktualisiert;
 
         public string UeberwachungPfad { get => _ueberwachungPfad; set => _ueberwachungPfad = value; }
         public string AusgabePfad { get => _ausgabePfad; set => _ausgabePfad = value; }
@@ -31,13 +32,14 @@ namespace PrintImageForButtonMachine
         public int AbstandInPixel { get => (int)(0.5 / 2.54 * _druckerAuflösung); }
         public Image VorschauBild { get => _vorschauBild; }
 
-        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox)
+        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
             _ausgabePfad = p_ausgabePfad;
             _faktor = p_Faktor / 100;
             _groesse = p_Groesse;
             _pictureBox = p_PictureBox;
+            _labelAktualisiert = labelAktualisiert;
         }
 
         public void BearbeiteOrdner()
@@ -58,22 +60,22 @@ namespace PrintImageForButtonMachine
                 file.MoveTo(pfad);
             }
 
-            Bitmap neuesBild = GeneriereBild(ordnerPfad);
-
-            // Speichere generiertes Bild
-            _printPath = Path.Combine(ordnerPfad, "print.jpg");
-            if (!File.Exists(_printPath))
-            {
-                File.Delete(_printPath);
-            }
-            neuesBild.Save(_printPath);
-
+            using (Bitmap neuesBild = GeneriereBild(ordnerPfad)) {
+                // Speichere generiertes Bild
+                _printPath = Path.Combine(ordnerPfad, "print.jpg");
+                if (!File.Exists(_printPath))
+                {
+                    File.Delete(_printPath);
+                }
+                neuesBild.Save(_printPath);
+            } ;
             DruckeBild();
         }
 
         public void GeneriereVorschau() {
             Image vorschaubild = GeneriereBild(_ueberwachungPfad);
             _pictureBox.Image = vorschaubild;
+            _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
         }
 
         public int ErmittleAnzahlBilderProSeite()
@@ -89,16 +91,19 @@ namespace PrintImageForButtonMachine
             FileInfo[] dateien = neuesVerzeichnis.GetFiles("*.jpg");
             Bitmap neuesBild = new Bitmap(BreiteInPixel, HöheInPixel);
             int anzahlBilderProZeile = ErmittleAnzahlBilder(BreiteInPixel, GroesseInPixel);
-            Graphics g = Graphics.FromImage(neuesBild);
-            for (int i = 0; i < dateien.Length; i++)
-            {
-                Image image = Image.FromFile(dateien[i].FullName);
-                Image imageZugeschnitten = ZuschneidenBild(image, _faktor);
-                var imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel);
-                int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
-                int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) * (GroesseInPixel + AbstandInPixel);
-                g.DrawImage(imageSkaliert, new Rectangle(x, y, imageSkaliert.Width, imageSkaliert.Height));
-            }            
+            using (Graphics g = Graphics.FromImage(neuesBild)) {
+                for (int i = 0; i < dateien.Length; i++)
+                {
+                    using (Image image = Image.FromFile(dateien[i].FullName)) {
+                        Image imageZugeschnitten = ZuschneidenBild(image, _faktor);
+                        var imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel);
+                        int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
+                        int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) * (GroesseInPixel + AbstandInPixel);
+                        g.DrawImage(imageSkaliert, new Rectangle(x, y, imageSkaliert.Width, imageSkaliert.Height));
+                    } ;
+                }
+            };
+                    
             return neuesBild;
         }
 
