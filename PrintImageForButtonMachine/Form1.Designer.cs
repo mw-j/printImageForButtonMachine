@@ -60,9 +60,10 @@
             // 
             // btn_startStop
             // 
-            btn_startStop.Location = new Point(12, 385);
+            btn_startStop.Location = new Point(14, 513);
+            btn_startStop.Margin = new Padding(3, 4, 3, 4);
             btn_startStop.Name = "btn_startStop";
-            btn_startStop.Size = new Size(168, 23);
+            btn_startStop.Size = new Size(192, 31);
             btn_startStop.TabIndex = 0;
             btn_startStop.Text = "Überwachung starten";
             btn_startStop.UseVisualStyleBackColor = true;
@@ -70,9 +71,10 @@
             // 
             // textBox_ueberwachung
             // 
-            textBox_ueberwachung.Location = new Point(12, 132);
+            textBox_ueberwachung.Location = new Point(14, 176);
+            textBox_ueberwachung.Margin = new Padding(3, 4, 3, 4);
             textBox_ueberwachung.Name = "textBox_ueberwachung";
-            textBox_ueberwachung.Size = new Size(364, 23);
+            textBox_ueberwachung.Size = new Size(415, 27);
             textBox_ueberwachung.TabIndex = 1;
             textBox_ueberwachung.Text = "bild-watch";
             textBox_ueberwachung.TextChanged += textBox_ueberwachung_TextChanged;
@@ -80,18 +82,19 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 114);
+            label1.Location = new Point(14, 152);
             label1.Name = "label1";
-            label1.Size = new Size(245, 15);
+            label1.Size = new Size(308, 20);
             label1.TabIndex = 2;
             label1.Text = "Wähle den Ordner der überwacht werden soll";
             label1.Click += label1_Click;
             // 
             // btn_ueberwachung
             // 
-            btn_ueberwachung.Location = new Point(382, 131);
+            btn_ueberwachung.Location = new Point(437, 175);
+            btn_ueberwachung.Margin = new Padding(3, 4, 3, 4);
             btn_ueberwachung.Name = "btn_ueberwachung";
-            btn_ueberwachung.Size = new Size(90, 23);
+            btn_ueberwachung.Size = new Size(103, 31);
             btn_ueberwachung.TabIndex = 3;
             btn_ueberwachung.Text = "Durchsuchen";
             btn_ueberwachung.UseVisualStyleBackColor = true;
@@ -99,9 +102,10 @@
             // 
             // btn_ausgabe
             // 
-            btn_ausgabe.Location = new Point(382, 181);
+            btn_ausgabe.Location = new Point(437, 241);
+            btn_ausgabe.Margin = new Padding(3, 4, 3, 4);
             btn_ausgabe.Name = "btn_ausgabe";
-            btn_ausgabe.Size = new Size(90, 23);
+            btn_ausgabe.Size = new Size(103, 31);
             btn_ausgabe.TabIndex = 6;
             btn_ausgabe.Text = "Durchsuchen";
             btn_ausgabe.UseVisualStyleBackColor = true;
@@ -110,26 +114,28 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(12, 164);
+            label2.Location = new Point(14, 219);
             label2.Name = "label2";
-            label2.Size = new Size(147, 15);
+            label2.Size = new Size(185, 20);
             label2.TabIndex = 5;
             label2.Text = "Wähle den Ausgabeordner";
             label2.Click += label2_Click;
             // 
             // textBox_ausgabe
             // 
-            textBox_ausgabe.Location = new Point(12, 182);
+            textBox_ausgabe.Location = new Point(14, 243);
+            textBox_ausgabe.Margin = new Padding(3, 4, 3, 4);
             textBox_ausgabe.Name = "textBox_ausgabe";
-            textBox_ausgabe.Size = new Size(364, 23);
+            textBox_ausgabe.Size = new Size(415, 27);
             textBox_ausgabe.TabIndex = 4;
             textBox_ausgabe.Text = "bild-out";
             // 
             // btn_print
             // 
-            btn_print.Location = new Point(12, 414);
+            btn_print.Location = new Point(14, 552);
+            btn_print.Margin = new Padding(3, 4, 3, 4);
             btn_print.Name = "btn_print";
-            btn_print.Size = new Size(168, 23);
+            btn_print.Size = new Size(192, 31);
             btn_print.TabIndex = 7;
             btn_print.Text = "Jetzt drucken";
             btn_print.UseVisualStyleBackColor = true;
@@ -140,11 +146,12 @@
             textBox3.BackColor = SystemColors.Control;
             textBox3.BorderStyle = BorderStyle.None;
             textBox3.ForeColor = SystemColors.ControlText;
-            textBox3.Location = new Point(12, 12);
+            textBox3.Location = new Point(14, 16);
+            textBox3.Margin = new Padding(3, 4, 3, 4);
             textBox3.Multiline = true;
             textBox3.Name = "textBox3";
             textBox3.ReadOnly = true;
-            textBox3.Size = new Size(460, 82);
+            textBox3.Size = new Size(915, 109);
             textBox3.TabIndex = 9;
             textBox3.Text = resources.GetString("textBox3.Text");
             textBox3.TextChanged += textBox3_TextChanged;
@@ -152,29 +159,31 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(12, 268);
+            label3.Location = new Point(14, 357);
             label3.Name = "label3";
-            label3.Size = new Size(163, 15);
+            label3.Size = new Size(203, 20);
             label3.TabIndex = 11;
             label3.Text = "Größe des Bildausschnitts (%)";
             label3.Click += label3_Click_1;
             // 
             // num_faktor
             // 
-            num_faktor.Location = new Point(193, 266);
+            num_faktor.Location = new Point(221, 355);
+            num_faktor.Margin = new Padding(3, 4, 3, 4);
             num_faktor.Maximum = new decimal(new int[] { 99, 0, 0, 0 });
             num_faktor.Name = "num_faktor";
-            num_faktor.Size = new Size(40, 23);
+            num_faktor.Size = new Size(46, 27);
             num_faktor.TabIndex = 12;
             num_faktor.Value = new decimal(new int[] { 80, 0, 0, 0 });
             // 
             // num_groesse
             // 
             num_groesse.DecimalPlaces = 2;
-            num_groesse.Location = new Point(186, 295);
+            num_groesse.Location = new Point(213, 393);
+            num_groesse.Margin = new Padding(3, 4, 3, 4);
             num_groesse.Maximum = new decimal(new int[] { 999, 0, 0, 131072 });
             num_groesse.Name = "num_groesse";
-            num_groesse.Size = new Size(47, 23);
+            num_groesse.Size = new Size(54, 27);
             num_groesse.TabIndex = 14;
             num_groesse.Value = new decimal(new int[] { 58, 0, 0, 65536 });
             num_groesse.ValueChanged += numericUpDown2_ValueChanged;
@@ -182,9 +191,9 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(12, 297);
+            label4.Location = new Point(14, 396);
             label4.Name = "label4";
-            label4.Size = new Size(157, 15);
+            label4.Size = new Size(197, 20);
             label4.TabIndex = 13;
             label4.Text = "Durchmesser der Bilder (cm)";
             label4.Click += label4_Click;
@@ -194,9 +203,9 @@
             label_aktivIcon.AutoSize = true;
             label_aktivIcon.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             label_aktivIcon.ForeColor = Color.FromArgb(0, 192, 0);
-            label_aktivIcon.Location = new Point(12, 353);
+            label_aktivIcon.Location = new Point(14, 471);
             label_aktivIcon.Name = "label_aktivIcon";
-            label_aktivIcon.Size = new Size(20, 21);
+            label_aktivIcon.Size = new Size(24, 28);
             label_aktivIcon.TabIndex = 16;
             label_aktivIcon.Text = "●";
             label_aktivIcon.Visible = false;
@@ -204,9 +213,9 @@
             // label_aktivText
             // 
             label_aktivText.AutoSize = true;
-            label_aktivText.Location = new Point(30, 358);
+            label_aktivText.Location = new Point(34, 477);
             label_aktivText.Name = "label_aktivText";
-            label_aktivText.Size = new Size(109, 15);
+            label_aktivText.Size = new Size(135, 20);
             label_aktivText.TabIndex = 17;
             label_aktivText.Text = "Überwachung aktiv";
             label_aktivText.Visible = false;
@@ -214,37 +223,42 @@
             // 
             // num_Auflösung
             // 
-            num_Auflösung.Location = new Point(193, 325);
+            num_Auflösung.Location = new Point(221, 433);
+            num_Auflösung.Margin = new Padding(3, 4, 3, 4);
             num_Auflösung.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
             num_Auflösung.Name = "num_Auflösung";
-            num_Auflösung.Size = new Size(40, 23);
+            num_Auflösung.Size = new Size(46, 27);
             num_Auflösung.TabIndex = 19;
             num_Auflösung.Value = new decimal(new int[] { 96, 0, 0, 0 });
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(12, 327);
+            label5.Location = new Point(14, 436);
             label5.Name = "label5";
-            label5.Size = new Size(114, 15);
+            label5.Size = new Size(143, 20);
             label5.TabIndex = 18;
             label5.Text = "Ziel-Auflösung (dpi)";
             label5.Click += label5_Click_1;
             // 
             // pictureBox1
             // 
-            pictureBox1.Location = new Point(513, 12);
+            pictureBox1.BorderStyle = BorderStyle.FixedSingle;
+            pictureBox1.Location = new Point(586, 114);
+            pictureBox1.Margin = new Padding(3, 4, 3, 4);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(299, 419);
+            pictureBox1.Size = new Size(342, 484);
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 20;
             pictureBox1.TabStop = false;
+            pictureBox1.Click += pictureBox1_Click;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 443);
+            button1.Location = new Point(14, 591);
+            button1.Margin = new Padding(3, 4, 3, 4);
             button1.Name = "button1";
-            button1.Size = new Size(168, 23);
+            button1.Size = new Size(192, 31);
             button1.TabIndex = 21;
             button1.Text = "Vorschau aktualisieren";
             button1.UseVisualStyleBackColor = true;
@@ -253,9 +267,9 @@
             // label_Uhrzeit
             // 
             label_Uhrzeit.AutoSize = true;
-            label_Uhrzeit.Location = new Point(513, 434);
+            label_Uhrzeit.Location = new Point(586, 602);
             label_Uhrzeit.Name = "label_Uhrzeit";
-            label_Uhrzeit.Size = new Size(145, 15);
+            label_Uhrzeit.Size = new Size(180, 20);
             label_Uhrzeit.TabIndex = 22;
             label_Uhrzeit.Text = "Zuletzt aktualisiert: --:--:--";
             label_Uhrzeit.Click += label6_Click_1;
@@ -263,25 +277,26 @@
             // comboBox_drucker
             // 
             comboBox_drucker.FormattingEnabled = true;
-            comboBox_drucker.Location = new Point(66, 219);
+            comboBox_drucker.Location = new Point(75, 292);
+            comboBox_drucker.Margin = new Padding(3, 4, 3, 4);
             comboBox_drucker.Name = "comboBox_drucker";
-            comboBox_drucker.Size = new Size(310, 23);
+            comboBox_drucker.Size = new Size(354, 28);
             comboBox_drucker.TabIndex = 23;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(12, 222);
+            label6.Location = new Point(14, 296);
             label6.Name = "label6";
-            label6.Size = new Size(48, 15);
+            label6.Size = new Size(60, 20);
             label6.TabIndex = 24;
             label6.Text = "Drucker";
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(823, 535);
+            ClientSize = new Size(941, 636);
             Controls.Add(label6);
             Controls.Add(comboBox_drucker);
             Controls.Add(label_Uhrzeit);
@@ -305,6 +320,7 @@
             Controls.Add(textBox_ueberwachung);
             Controls.Add(btn_startStop);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Margin = new Padding(3, 4, 3, 4);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Bilder für Button-Maschine generieren";

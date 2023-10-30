@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace PrintImageForButtonMachine
 {
@@ -12,8 +13,8 @@ namespace PrintImageForButtonMachine
     {
         private const double cmProInch = 2.54;
         private string _printPath;
-        private string _ueberwachungPfad;
-        private string _ausgabePfad;
+        private System.Windows.Forms.TextBox _ueberwachungPfad;
+        private System.Windows.Forms.TextBox _ausgabePfad;
         private double _faktor; // [0,1]
         private double _groesse; // cm
         private PictureBox _pictureBox;
@@ -22,8 +23,8 @@ namespace PrintImageForButtonMachine
         private Label _labelAktualisiert;
         private readonly ComboBox _comboBox;
 
-        public string UeberwachungPfad { get => _ueberwachungPfad; set => _ueberwachungPfad = value; }
-        public string AusgabePfad { get => _ausgabePfad; set => _ausgabePfad = value; }
+        public string UeberwachungPfad { get => _ueberwachungPfad.Text; set => _ueberwachungPfad.Text = value; }
+        public string AusgabePfad { get => _ausgabePfad.Text; set => _ausgabePfad.Text = value; }
         public double Faktor { get => _faktor * 100; set => _faktor = value / 100; }
         public double Groesse { get => _groesse; set => _groesse = value; }
         
@@ -34,7 +35,7 @@ namespace PrintImageForButtonMachine
         public int AbstandInPixel { get => (int)(0.5 / cmProInch * _druckerAuflösung); }
         public Image VorschauBild { get => _vorschauBild; }
 
-        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
+        public ImageProcessor(System.Windows.Forms.TextBox p_UeberwachungPfad, System.Windows.Forms.TextBox p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
             _ausgabePfad = p_ausgabePfad;
@@ -47,12 +48,12 @@ namespace PrintImageForButtonMachine
 
         public void BearbeiteOrdner()
         {
-            DirectoryInfo directory = new DirectoryInfo(_ueberwachungPfad);
+            DirectoryInfo directory = new DirectoryInfo(_ueberwachungPfad.Text);
             FileInfo[] files = directory.GetFiles("*.jpg");
 
             // verschiebe Dateien in eigenen Ordner
             string ordnerName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string ordnerPfad = Path.Combine(_ausgabePfad, ordnerName);
+            string ordnerPfad = Path.Combine(_ausgabePfad.Text, ordnerName);
             try
             {
                 if (!Directory.Exists(ordnerPfad))
@@ -68,11 +69,11 @@ namespace PrintImageForButtonMachine
             catch {
                 MessageBox.Show("Eine Datei im überwachten Ordner konnte nicht kopiert werden, da sie von einem anderen Programm blockiert wird. Möglicherweise hat das Aufnahmeprogramm noch eine Vorschau geöffnet. ", "Bearbeitung nicht möglich", MessageBoxButtons.OK);
                 // Kopiere breits kopierte Fotos zurück
-                DirectoryInfo dirTarget = new DirectoryInfo(_ueberwachungPfad);
+                DirectoryInfo dirTarget = new DirectoryInfo(_ueberwachungPfad.Text);
                 FileInfo[] filesTarget = dirTarget.GetFiles("*.jpg");
                 foreach (FileInfo file in filesTarget)
                 {
-                    string pfad = Path.Combine(_ueberwachungPfad, file.Name);
+                    string pfad = Path.Combine(_ueberwachungPfad.Text, file.Name);
                     file.MoveTo(pfad);
                 }
 
@@ -92,7 +93,7 @@ namespace PrintImageForButtonMachine
         }
 
         public void GeneriereVorschau() {
-            Image vorschaubild = GeneriereBild(_ueberwachungPfad);
+            Image vorschaubild = GeneriereBild(_ueberwachungPfad.Text);
             _pictureBox.Image = vorschaubild;
             _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
         }

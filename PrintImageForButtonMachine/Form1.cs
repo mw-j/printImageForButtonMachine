@@ -14,7 +14,7 @@ namespace WinFormsApp1
         public Form1()
         {
             InitializeComponent();
-            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
+            processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             watcher = new ImageWatcher(processor);
             checker = new ImageChecker(processor);
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
@@ -182,6 +182,11 @@ namespace WinFormsApp1
         }
 
         private void label5_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
         {
 
         }
