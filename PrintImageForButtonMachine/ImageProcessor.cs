@@ -93,6 +93,11 @@ namespace PrintImageForButtonMachine
         }
 
         public void GeneriereVorschau() {
+            if (_pictureBox.Image != null)
+            {
+                _pictureBox.Image.Dispose();
+            }
+            
             Image vorschaubild = GeneriereBild(_ueberwachungPfad.Text);
             _pictureBox.Image = vorschaubild;
             _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
@@ -111,16 +116,23 @@ namespace PrintImageForButtonMachine
             FileInfo[] dateien = neuesVerzeichnis.GetFiles("*.jpg");
             Bitmap neuesBild = new Bitmap(BreiteInPixel, HöheInPixel);
             int anzahlBilderProZeile = ErmittleAnzahlBilder(BreiteInPixel, GroesseInPixel);
+            
             using (Graphics g = Graphics.FromImage(neuesBild)) {
                 for (int i = 0; i < dateien.Length; i++)
                 {
                     using (Image image = Image.FromFile(dateien[i].FullName)) {
-                        Image imageZugeschnitten = SchneideBildZu(image, _faktor);
-                        var imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel);
-                        int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
-                        int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) * (GroesseInPixel + AbstandInPixel);
-                        g.DrawImage(imageSkaliert, new Rectangle(x, y, imageSkaliert.Width, imageSkaliert.Height));
-                    } ;
+                        using (Image imageZugeschnitten = SchneideBildZu(image, _faktor))
+                        {
+                            using (Image imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel))
+                            {
+                                int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
+                                int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) *
+                                    (GroesseInPixel + AbstandInPixel);
+                                g.DrawImage(imageSkaliert,
+                                    new Rectangle(x, y, imageSkaliert.Width, imageSkaliert.Height));
+                            }
+                        }
+                    }
                 }
             };
                     

@@ -75,10 +75,10 @@ namespace WinFormsApp1
             btn_ausgabe.Enabled = wert;
             num_faktor.Enabled = wert;
             num_groesse.Enabled = wert;
-            num_Auflösung.Enabled = wert;
+            num_AuflÃ¶sung.Enabled = wert;
             label_aktivIcon.Visible = !wert;
             label_aktivText.Visible = !wert;
-            btn_startStop.Text = wert ? "Überwachung starten" : "Überwachung stoppen";
+            btn_startStop.Text = wert ? "Ãœberwachung starten" : "Ãœberwachung stoppen";
             comboBox_drucker.Enabled = wert;
         }
 
@@ -99,9 +99,9 @@ namespace WinFormsApp1
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                // Der Benutzer hat einen Ordner ausgewählt und auf "OK" geklickt
+                // Der Benutzer hat einen Ordner ausgewÃ¤hlt und auf "OK" geklickt
                 // Der Pfad zum Ordner ist in folderBrowserDialog1.SelectedPath
-                // Sie können diesen Pfad nun verwenden
+                // Sie kÃ¶nnen diesen Pfad nun verwenden
                 string path = folderBrowserDialog1.SelectedPath;
                 textBox_ueberwachung.Text = path;
             }
@@ -148,9 +148,9 @@ namespace WinFormsApp1
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                // Der Benutzer hat einen Ordner ausgewählt und auf "OK" geklickt
+                // Der Benutzer hat einen Ordner ausgewÃ¤hlt und auf "OK" geklickt
                 // Der Pfad zum Ordner ist in folderBrowserDialog1.SelectedPath
-                // Sie können diesen Pfad nun verwenden
+                // Sie kÃ¶nnen diesen Pfad nun verwenden
                 string path = folderBrowserDialog1.SelectedPath;
                 textBox_ausgabe.Text = path;
             }
