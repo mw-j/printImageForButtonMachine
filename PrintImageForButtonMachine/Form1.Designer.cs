@@ -45,8 +45,6 @@
             label4 = new Label();
             label_aktivIcon = new Label();
             label_aktivText = new Label();
-            num_Auflösung = new NumericUpDown();
-            label5 = new Label();
             pictureBox1 = new PictureBox();
             button1 = new Button();
             label_Uhrzeit = new Label();
@@ -54,7 +52,6 @@
             label6 = new Label();
             ((System.ComponentModel.ISupportInitialize)num_faktor).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)num_Auflösung).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -219,26 +216,6 @@
             label_aktivText.Visible = false;
             label_aktivText.Click += label7_Click;
             // 
-            // num_Auflösung
-            // 
-            num_Auflösung.Location = new Point(221, 433);
-            num_Auflösung.Margin = new Padding(3, 4, 3, 4);
-            num_Auflösung.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
-            num_Auflösung.Name = "num_Auflösung";
-            num_Auflösung.Size = new Size(46, 27);
-            num_Auflösung.TabIndex = 19;
-            num_Auflösung.Value = new decimal(new int[] { 96, 0, 0, 0 });
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Location = new Point(14, 436);
-            label5.Name = "label5";
-            label5.Size = new Size(143, 20);
-            label5.TabIndex = 18;
-            label5.Text = "Ziel-Auflösung (dpi)";
-            label5.Click += label5_Click_1;
-            // 
             // pictureBox1
             // 
             pictureBox1.BorderStyle = BorderStyle.FixedSingle;
@@ -300,8 +277,6 @@
             Controls.Add(label_Uhrzeit);
             Controls.Add(button1);
             Controls.Add(pictureBox1);
-            Controls.Add(num_Auflösung);
-            Controls.Add(label5);
             Controls.Add(label_aktivText);
             Controls.Add(label_aktivIcon);
             Controls.Add(num_groesse);
@@ -325,7 +300,6 @@
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)num_faktor).EndInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).EndInit();
-            ((System.ComponentModel.ISupportInitialize)num_Auflösung).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -349,8 +323,6 @@
         private Label label4;
         private Label label_aktivIcon;
         private Label label_aktivText;
-        private NumericUpDown num_Auflösung;
-        private Label label5;
         private PictureBox pictureBox1;
         private Button button1;
         private Label label_Uhrzeit;

@@ -10,6 +10,7 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 - **Live-Vorschau** der aktuellen Seite, wird nur bei Änderungen neu berechnet
 - **Automatischer Druck**, sobald so viele Bilder vorhanden sind, wie auf eine Seite passen
 - **Manueller Druck** über „Jetzt drucken“, auch wenn die Seite noch nicht voll ist
+- **Druck in Originalgröße mit 300 dpi**: Die Kreise haben auf dem Papier exakt den eingestellten Durchmesser
 - **Archivierung:** Vor dem Druck werden die Fotos in einen Unterordner mit Zeitstempel im Ausgabeordner verschoben; die gedruckte Seite wird dort als `print.jpg` abgelegt
 
 ## Einstellungen

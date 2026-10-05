@@ -13,12 +13,16 @@ namespace PrintImageForButtonMachine
     internal class ImageProcessor
     {
         private const double cmProInch = 2.54;
+        private const double SeitenBreiteCm = 21; // A4
+        private const double SeitenHoeheCm = 29.7;
+        private const double AbstandCm = 0.5;
+        private const int VorschauDpi = 96; // genügt für die Bildschirmvorschau
+        private const int DruckDpi = 300; // mehr bringt auch bei 600-dpi-Laserdruckern keinen sichtbaren Gewinn
         private TextBox _ueberwachungPfad;
         private TextBox _ausgabePfad;
         private double _faktor; // [0,1]
         private double _groesse; // cm
         private PictureBox _pictureBox;
-        private int _druckerAuflösung = 96; // dpi
         private Label _labelAktualisiert;
         private readonly ComboBox _comboBox;
         private string? _vorschauSignatur; // Stand der zuletzt erzeugten Vorschau
@@ -28,12 +32,6 @@ namespace PrintImageForButtonMachine
         public string AusgabePfad { get => _ausgabePfad.Text; set => _ausgabePfad.Text = value; }
         public double Faktor { get => _faktor * 100; set => _faktor = value / 100; }
         public double Groesse { get => _groesse; set => _groesse = value; }
-
-        public int DruckerAuflösung { get => _druckerAuflösung; set => _druckerAuflösung = value; }
-        public int BreiteInPixel { get => (int)(21 / cmProInch * _druckerAuflösung); }
-        public int HöheInPixel { get => (int)(29.7 / cmProInch * _druckerAuflösung); }
-        public int GroesseInPixel { get => (int)(_groesse / cmProInch * _druckerAuflösung); }
-        public int AbstandInPixel { get => (int)(0.5 / cmProInch * _druckerAuflösung); }
 
         public ImageProcessor(TextBox p_UeberwachungPfad, TextBox p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
@@ -104,7 +102,7 @@ namespace PrintImageForButtonMachine
                 // Bild im Hintergrund erzeugen und speichern, damit die Oberfläche nicht blockiert
                 using Bitmap neuesBild = await Task.Run(() =>
                 {
-                    Bitmap bild = GeneriereBild(LeseBilder(ordnerPfad), out _);
+                    Bitmap bild = GeneriereBild(LeseBilder(ordnerPfad), DruckDpi, out _);
                     string printPath = Path.Combine(ordnerPfad, "print.jpg");
                     if (File.Exists(printPath))
                     {
@@ -134,7 +132,7 @@ namespace PrintImageForButtonMachine
                 if (erzwingen || signatur != _vorschauSignatur)
                 {
                     bool vollstaendig = false;
-                    Bitmap vorschaubild = await Task.Run(() => GeneriereBild(dateien, out vollstaendig));
+                    Bitmap vorschaubild = await Task.Run(() => GeneriereBild(dateien, VorschauDpi, out vollstaendig));
                     Image? altesBild = _pictureBox.Image;
                     _pictureBox.Image = vorschaubild;
                     altesBild?.Dispose();
@@ -151,8 +149,8 @@ namespace PrintImageForButtonMachine
 
         public int ErmittleAnzahlBilderProSeite()
         {
-            int anzahlSpalten = ErmittleAnzahlBilder(BreiteInPixel, GroesseInPixel);
-            int anzahlZeilen = ErmittleAnzahlBilder(HöheInPixel, GroesseInPixel);
+            int anzahlSpalten = ErmittleAnzahlBilder(SeitenBreiteCm);
+            int anzahlZeilen = ErmittleAnzahlBilder(SeitenHoeheCm);
             return anzahlSpalten * anzahlZeilen;
         }
 
@@ -164,7 +162,7 @@ namespace PrintImageForButtonMachine
         private string ErzeugeSignatur(FileInfo[] dateien)
         {
             var signatur = new StringBuilder();
-            signatur.Append(_faktor).Append('|').Append(_groesse).Append('|').Append(_druckerAuflösung);
+            signatur.Append(_faktor).Append('|').Append(_groesse);
             foreach (FileInfo datei in dateien)
             {
                 signatur.Append('|').Append(datei.Name).Append(':').Append(datei.Length).Append(':').Append(datei.LastWriteTimeUtc.Ticks);
@@ -173,17 +171,24 @@ namespace PrintImageForButtonMachine
         }
 
         /// <param name="vollstaendig">false, wenn mindestens ein Bild nicht geladen werden konnte.</param>
-        private Bitmap GeneriereBild(FileInfo[] dateien, out bool vollstaendig)
+        private Bitmap GeneriereBild(FileInfo[] dateien, int dpi, out bool vollstaendig)
         {
             vollstaendig = true;
-            int groesseInPixel = GroesseInPixel;
-            int abstandInPixel = AbstandInPixel;
-            Bitmap neuesBild = new Bitmap(BreiteInPixel, HöheInPixel);
-            int anzahlBilderProZeile = ErmittleAnzahlBilder(BreiteInPixel, groesseInPixel);
+            double groesseCm = _groesse;
+            int groesseInPixel = InPixel(groesseCm, dpi);
+            Bitmap neuesBild = new Bitmap(InPixel(SeitenBreiteCm, dpi), InPixel(SeitenHoeheCm, dpi));
+            neuesBild.SetResolution(dpi, dpi);
+            int anzahlBilderProZeile = ErmittleAnzahlBilder(SeitenBreiteCm);
             using (Graphics g = Graphics.FromImage(neuesBild)) {
                 // Weißer Hintergrund, da JPEG keine Transparenz kennt
                 g.Clear(Color.White);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                // Für den Druck hochwertig skalieren, für die Vorschau genügt die schnellere Variante
+                if (dpi >= DruckDpi)
+                {
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                }
                 for (int i = 0; i < dateien.Length; i++)
                 {
                     using Image? image = LadeBild(dateien[i].FullName);
@@ -192,8 +197,9 @@ namespace PrintImageForButtonMachine
                         vollstaendig = false;
                         continue;
                     }
-                    int x = abstandInPixel + (i % anzahlBilderProZeile) * (groesseInPixel + abstandInPixel);
-                    int y = abstandInPixel + (i / anzahlBilderProZeile) * (groesseInPixel + abstandInPixel);
+                    // Position in cm berechnen und erst dann umrechnen, damit sich Rundungsfehler nicht aufsummieren
+                    int x = InPixel(AbstandCm + (i % anzahlBilderProZeile) * (groesseCm + AbstandCm), dpi);
+                    int y = InPixel(AbstandCm + (i / anzahlBilderProZeile) * (groesseCm + AbstandCm), dpi);
                     ZeichneKreisausschnitt(g, image, new Rectangle(x, y, groesseInPixel, groesseInPixel));
                 }
             };
@@ -229,8 +235,13 @@ namespace PrintImageForButtonMachine
                 printDocument.PrintPage += (sender, args) =>
                 {
                     if (args.Graphics == null) return;
+                    // Beim Drucker entspricht GraphicsUnit.Display 1/100 Zoll; das Bild wird in seiner physischen Größe platziert
+                    args.Graphics.PageUnit = GraphicsUnit.Display;
                     args.Graphics.PageScale = 1;
-                    args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, bild.Width, bild.Height);
+                    args.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    float breite = bild.Width / bild.HorizontalResolution * 100f;
+                    float hoehe = bild.Height / bild.VerticalResolution * 100f;
+                    args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, breite, hoehe);
                 };
                 printDocument.Print();
             }
@@ -257,8 +268,11 @@ namespace PrintImageForButtonMachine
 
             Rectangle bildausschnitt = new Rectangle((p_Bild.Width - kantenlaenge) / 2, (p_Bild.Height - kantenlaenge) / 2, kantenlaenge, kantenlaenge);
             using Bitmap skaliert = new Bitmap(zielRechteck.Width, zielRechteck.Height);
+            skaliert.SetResolution(ziel.DpiX, ziel.DpiY);
             using (Graphics g = Graphics.FromImage(skaliert))
             {
+                g.InterpolationMode = ziel.InterpolationMode;
+                g.PixelOffsetMode = ziel.PixelOffsetMode;
                 g.DrawImage(p_Bild, new Rectangle(0, 0, zielRechteck.Width, zielRechteck.Height), bildausschnitt, GraphicsUnit.Pixel);
             }
 
@@ -267,10 +281,14 @@ namespace PrintImageForButtonMachine
             ziel.FillEllipse(brush, zielRechteck);
         }
 
-        private int ErmittleAnzahlBilder(int p_verfügbareLänge, int p_LängeProBild)
+        private int ErmittleAnzahlBilder(double p_verfügbareLängeCm)
         {
+            return (int)((p_verfügbareLängeCm - AbstandCm) / (AbstandCm + _groesse));
+        }
 
-            return (p_verfügbareLänge - AbstandInPixel) / (AbstandInPixel + p_LängeProBild);
+        private static int InPixel(double cm, int dpi)
+        {
+            return (int)Math.Round(cm / cmProInch * dpi);
         }
     }
 }

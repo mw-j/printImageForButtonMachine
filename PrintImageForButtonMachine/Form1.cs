@@ -65,7 +65,6 @@ namespace WinFormsApp1
             btn_ausgabe.Enabled = wert;
             num_faktor.Enabled = wert;
             num_groesse.Enabled = wert;
-            num_Auflösung.Enabled = wert;
             label_aktivIcon.Visible = !wert;
             label_aktivText.Visible = !wert;
             btn_startStop.Text = wert ? "Überwachung starten" : "Überwachung stoppen";
@@ -186,11 +185,6 @@ namespace WinFormsApp1
         }
 
         private void label6_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label5_Click_1(object sender, EventArgs e)
         {
 
         }
