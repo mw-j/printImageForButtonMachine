@@ -1,4 +1,4 @@
-using PrintImageForButtonMachine;
+﻿using PrintImageForButtonMachine;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Windows.Forms;
@@ -8,15 +8,14 @@ namespace WinFormsApp1
     public partial class Form1 : Form
     {
         private ImageProcessor processor;
-        private ImageWatcher watcher;
         private ImageChecker checker;
 
         public Form1()
         {
             InitializeComponent();
             processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
-            watcher = new ImageWatcher(processor);
             checker = new ImageChecker(processor);
+            checker.Gestoppt += (sender, e) => DeAktiviereInputs(true);
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
             textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
             num_faktor.DataBindings.Add("Value", processor, "Faktor");
@@ -27,7 +26,7 @@ namespace WinFormsApp1
             {
                 comboBox_drucker.Items.Add(printer);
             }
-            PrintDocument pd = new PrintDocument();
+            using PrintDocument pd = new PrintDocument();
             comboBox_drucker.Text = pd.PrinterSettings.PrinterName;
         }
 
@@ -40,31 +39,22 @@ namespace WinFormsApp1
         {
             if (!checker.DoCheck)
             {
-                checker.startCheck();
-                DeAktiviereInputs(false);
+                if (checker.startCheck())
+                {
+                    DeAktiviereInputs(false);
+                }
             }
             else
             {
                 checker.stopCheck();
                 DeAktiviereInputs(true);
             }
+        }
 
-
-            //if (watcher.Watcher.EnableRaisingEvents == false)
-            //{
-            //    // Watcher starten
-            //    watcher.StarteFileSystemWatcher();
-            //    processor.GeneriereVorschau();
-            //    DeAktiviereInputs(false);
-
-            //}
-            //else
-            //{
-            //    // Watcher beenden
-            //    watcher.StoppeFileSystemWatcher();
-            //    DeAktiviereInputs(true);
-            //}
-
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            checker.stopCheck();
+            base.OnFormClosing(e);
         }
 
         private void DeAktiviereInputs(bool wert)
@@ -95,7 +85,7 @@ namespace WinFormsApp1
         private void btn_ueberwachung_Click(object sender, EventArgs e)
         {
             // Erstellen Sie eine neue Instanz von FolderBrowserDialog
-            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+            using FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
@@ -144,7 +134,7 @@ namespace WinFormsApp1
         private void btn_ausgabe_Click(object sender, EventArgs e)
         {
             // Erstellen Sie eine neue Instanz von FolderBrowserDialog
-            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+            using FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
@@ -166,14 +156,33 @@ namespace WinFormsApp1
 
         }
 
-        private void btn_print_Click(object sender, EventArgs e)
+        private async void btn_print_Click(object sender, EventArgs e)
         {
-            processor.BearbeiteOrdner();
+            try
+            {
+                await processor.BearbeiteOrdnerAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Die Bilder konnten nicht verarbeitet werden:\n{ex.Message}", "Fehler", MessageBoxButtons.OK);
+            }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
-            processor.GeneriereVorschau();
+            try
+            {
+                await processor.GeneriereVorschauAsync(true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Die Vorschau konnte nicht erzeugt werden:\n{ex.Message}", "Fehler", MessageBoxButtons.OK);
+            }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void label6_Click_1(object sender, EventArgs e)
@@ -182,11 +191,6 @@ namespace WinFormsApp1
         }
 
         private void label5_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
         {
 
         }
