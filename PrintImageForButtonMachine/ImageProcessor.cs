@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
@@ -11,28 +13,27 @@ namespace PrintImageForButtonMachine
     internal class ImageProcessor
     {
         private const double cmProInch = 2.54;
-        private string _printPath;
         private string _ueberwachungPfad;
         private string _ausgabePfad;
         private double _faktor; // [0,1]
         private double _groesse; // cm
         private PictureBox _pictureBox;
         private int _druckerAuflösung = 96; // dpi
-        private Image _vorschauBild = new Bitmap(20, 20);
         private Label _labelAktualisiert;
         private readonly ComboBox _comboBox;
+        private string? _vorschauSignatur; // Stand der zuletzt erzeugten Vorschau
+        private bool _beschaeftigt; // verhindert parallele Verarbeitung (nur im UI-Thread verwendet)
 
         public string UeberwachungPfad { get => _ueberwachungPfad; set => _ueberwachungPfad = value; }
         public string AusgabePfad { get => _ausgabePfad; set => _ausgabePfad = value; }
         public double Faktor { get => _faktor * 100; set => _faktor = value / 100; }
         public double Groesse { get => _groesse; set => _groesse = value; }
-        
+
         public int DruckerAuflösung { get => _druckerAuflösung; set => _druckerAuflösung = value; }
         public int BreiteInPixel { get => (int)(21 / cmProInch * _druckerAuflösung); }
         public int HöheInPixel { get => (int)(29.7 / cmProInch * _druckerAuflösung); }
         public int GroesseInPixel { get => (int)(_groesse / cmProInch * _druckerAuflösung); }
         public int AbstandInPixel { get => (int)(0.5 / cmProInch * _druckerAuflösung); }
-        public Image VorschauBild { get => _vorschauBild; }
 
         public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
@@ -45,56 +46,107 @@ namespace PrintImageForButtonMachine
             _comboBox = comboBox;
         }
 
-        public void BearbeiteOrdner()
+        /// <summary>
+        /// Druckt, sobald genügend Bilder für eine Seite vorhanden sind, ansonsten wird die Vorschau aktualisiert.
+        /// </summary>
+        public async Task PruefeOrdnerAsync()
         {
-            DirectoryInfo directory = new DirectoryInfo(_ueberwachungPfad);
-            FileInfo[] files = directory.GetFiles("*.jpg");
-
-            // verschiebe Dateien in eigenen Ordner
-            string ordnerName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string ordnerPfad = Path.Combine(_ausgabePfad, ordnerName);
-            try
+            FileInfo[] dateien = LeseBilder(_ueberwachungPfad);
+            if (dateien.Length > 0 && dateien.Length >= ErmittleAnzahlBilderProSeite())
             {
-                if (!Directory.Exists(ordnerPfad))
-                {
-                    Directory.CreateDirectory(ordnerPfad);
-                }
-                foreach (FileInfo file in files)
-                {
-                    string pfad = Path.Combine(ordnerPfad, file.Name);
-                    file.MoveTo(pfad);
-                }
+                await BearbeiteOrdnerAsync();
             }
-            catch {
-                MessageBox.Show("Eine Datei im überwachten Ordner konnte nicht kopiert werden, da sie von einem anderen Programm blockiert wird. Möglicherweise hat das Aufnahmeprogramm noch eine Vorschau geöffnet. ", "Bearbeitung nicht möglich", MessageBoxButtons.OK);
-                // Kopiere breits kopierte Fotos zurück
-                DirectoryInfo dirTarget = new DirectoryInfo(_ueberwachungPfad);
-                FileInfo[] filesTarget = dirTarget.GetFiles("*.jpg");
-                foreach (FileInfo file in filesTarget)
-                {
-                    string pfad = Path.Combine(_ueberwachungPfad, file.Name);
-                    file.MoveTo(pfad);
-                }
-
-                return;
+            else
+            {
+                await GeneriereVorschauAsync(false);
             }
-
-            using (Bitmap neuesBild = GeneriereBild(ordnerPfad)) {
-                // Speichere generiertes Bild
-                _printPath = Path.Combine(ordnerPfad, "print.jpg");
-                if (!File.Exists(_printPath))
-                {
-                    File.Delete(_printPath);
-                }
-                neuesBild.Save(_printPath);
-            } ;
-            DruckeBild();
         }
 
-        public void GeneriereVorschau() {
-            Image vorschaubild = GeneriereBild(_ueberwachungPfad);
-            _pictureBox.Image = vorschaubild;
-            _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
+        public async Task BearbeiteOrdnerAsync()
+        {
+            if (_beschaeftigt) return;
+            _beschaeftigt = true;
+            try
+            {
+                FileInfo[] files = LeseBilder(_ueberwachungPfad);
+                if (files.Length == 0) return;
+
+                // verschiebe Dateien in eigenen Ordner
+                string ordnerName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string ordnerPfad = Path.Combine(_ausgabePfad, ordnerName);
+                var verschobeneDateien = new List<(string Quelle, string Ziel)>();
+                try
+                {
+                    Directory.CreateDirectory(ordnerPfad);
+                    foreach (FileInfo file in files)
+                    {
+                        string quelle = file.FullName;
+                        string ziel = Path.Combine(ordnerPfad, file.Name);
+                        file.MoveTo(ziel);
+                        verschobeneDateien.Add((quelle, ziel));
+                    }
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    MessageBox.Show("Eine Datei im überwachten Ordner konnte nicht kopiert werden, da sie von einem anderen Programm blockiert wird. Möglicherweise hat das Aufnahmeprogramm noch eine Vorschau geöffnet. ", "Bearbeitung nicht möglich", MessageBoxButtons.OK);
+                    // Verschiebe bereits verschobene Fotos zurück
+                    foreach (var (quelle, ziel) in verschobeneDateien)
+                    {
+                        File.Move(ziel, quelle);
+                    }
+                    if (Directory.Exists(ordnerPfad) && !Directory.EnumerateFileSystemEntries(ordnerPfad).Any())
+                    {
+                        Directory.Delete(ordnerPfad);
+                    }
+                    return;
+                }
+
+                // Bild im Hintergrund erzeugen und speichern, damit die Oberfläche nicht blockiert
+                using Bitmap neuesBild = await Task.Run(() =>
+                {
+                    Bitmap bild = GeneriereBild(LeseBilder(ordnerPfad), out _);
+                    string printPath = Path.Combine(ordnerPfad, "print.jpg");
+                    if (File.Exists(printPath))
+                    {
+                        File.Delete(printPath);
+                    }
+                    bild.Save(printPath, ImageFormat.Jpeg);
+                    return bild;
+                });
+                DruckeBild(neuesBild);
+                _vorschauSignatur = null;
+            }
+            finally
+            {
+                _beschaeftigt = false;
+            }
+        }
+
+        /// <param name="erzwingen">Vorschau auch dann neu erzeugen, wenn sich nichts geändert hat.</param>
+        public async Task GeneriereVorschauAsync(bool erzwingen)
+        {
+            if (_beschaeftigt) return;
+            _beschaeftigt = true;
+            try
+            {
+                FileInfo[] dateien = LeseBilder(_ueberwachungPfad);
+                string signatur = ErzeugeSignatur(dateien);
+                if (erzwingen || signatur != _vorschauSignatur)
+                {
+                    bool vollstaendig = false;
+                    Bitmap vorschaubild = await Task.Run(() => GeneriereBild(dateien, out vollstaendig));
+                    Image? altesBild = _pictureBox.Image;
+                    _pictureBox.Image = vorschaubild;
+                    altesBild?.Dispose();
+                    // Nicht ladbare Bilder (z. B. noch im Schreibvorgang) beim nächsten Durchlauf erneut versuchen
+                    _vorschauSignatur = vollstaendig ? signatur : null;
+                }
+                _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
+            }
+            finally
+            {
+                _beschaeftigt = false;
+            }
         }
 
         public int ErmittleAnzahlBilderProSeite()
@@ -104,44 +156,80 @@ namespace PrintImageForButtonMachine
             return anzahlSpalten * anzahlZeilen;
         }
 
-        private Bitmap GeneriereBild(string ordnerPfad)
+        private static FileInfo[] LeseBilder(string ordnerPfad)
         {
-            DirectoryInfo neuesVerzeichnis = new DirectoryInfo(ordnerPfad);
-            FileInfo[] dateien = neuesVerzeichnis.GetFiles("*.jpg");
+            return new DirectoryInfo(ordnerPfad).GetFiles("*.jpg");
+        }
+
+        private string ErzeugeSignatur(FileInfo[] dateien)
+        {
+            var signatur = new StringBuilder();
+            signatur.Append(_faktor).Append('|').Append(_groesse).Append('|').Append(_druckerAuflösung);
+            foreach (FileInfo datei in dateien)
+            {
+                signatur.Append('|').Append(datei.Name).Append(':').Append(datei.Length).Append(':').Append(datei.LastWriteTimeUtc.Ticks);
+            }
+            return signatur.ToString();
+        }
+
+        /// <param name="vollstaendig">false, wenn mindestens ein Bild nicht geladen werden konnte.</param>
+        private Bitmap GeneriereBild(FileInfo[] dateien, out bool vollstaendig)
+        {
+            vollstaendig = true;
+            int groesseInPixel = GroesseInPixel;
+            int abstandInPixel = AbstandInPixel;
             Bitmap neuesBild = new Bitmap(BreiteInPixel, HöheInPixel);
-            int anzahlBilderProZeile = ErmittleAnzahlBilder(BreiteInPixel, GroesseInPixel);
+            int anzahlBilderProZeile = ErmittleAnzahlBilder(BreiteInPixel, groesseInPixel);
             using (Graphics g = Graphics.FromImage(neuesBild)) {
+                // Weißer Hintergrund, da JPEG keine Transparenz kennt
+                g.Clear(Color.White);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
                 for (int i = 0; i < dateien.Length; i++)
                 {
-                    using (Image image = Image.FromFile(dateien[i].FullName)) {
-                        Image imageZugeschnitten = SchneideBildZu(image, _faktor);
-                        var imageSkaliert = SkaliereBild(imageZugeschnitten, GroesseInPixel);
-                        int x = AbstandInPixel + (i % anzahlBilderProZeile) * (GroesseInPixel + AbstandInPixel);
-                        int y = AbstandInPixel + (int)Math.Floor((double)(i / anzahlBilderProZeile)) * (GroesseInPixel + AbstandInPixel);
-                        g.DrawImage(imageSkaliert, new Rectangle(x, y, imageSkaliert.Width, imageSkaliert.Height));
-                    } ;
+                    using Image? image = LadeBild(dateien[i].FullName);
+                    if (image == null)
+                    {
+                        vollstaendig = false;
+                        continue;
+                    }
+                    int x = abstandInPixel + (i % anzahlBilderProZeile) * (groesseInPixel + abstandInPixel);
+                    int y = abstandInPixel + (i / anzahlBilderProZeile) * (groesseInPixel + abstandInPixel);
+                    ZeichneKreisausschnitt(g, image, new Rectangle(x, y, groesseInPixel, groesseInPixel));
                 }
             };
-                    
+
             return neuesBild;
         }
 
-        private void DruckeBild() {
+        /// <summary>
+        /// Lädt das Bild vollständig in den Speicher, damit die Datei nicht für die Dauer der Verarbeitung gesperrt bleibt.
+        /// Liefert null, wenn die Datei (noch) nicht gelesen werden kann.
+        /// </summary>
+        private static Image? LadeBild(string pfad)
+        {
             try
             {
-                var printDocument = new PrintDocument();
+                // Der MemoryStream muss so lange leben wie das Bild; er hält keine nativen Ressourcen
+                return Image.FromStream(new MemoryStream(File.ReadAllBytes(pfad)));
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is OutOfMemoryException)
+            {
+                return null;
+            }
+        }
+
+        private void DruckeBild(Image bild) {
+            try
+            {
+                using var printDocument = new PrintDocument();
                 printDocument.PrinterSettings.PrinterName = _comboBox.Text;
                 printDocument.DefaultPageSettings.Landscape = false;
                 printDocument.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-                var a = printDocument.DefaultPageSettings.PrinterResolution;
 
                 printDocument.PrintPage += (sender, args) =>
                 {
-                    using (Image image = Image.FromFile(_printPath))
-                    {
-                        args.Graphics.PageScale = 1;
-                        args.Graphics.DrawImage(image, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, image.Width, image.Height);
-                    }
+                    args.Graphics.PageScale = 1;
+                    args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, bild.Width, bild.Height);
                 };
                 printDocument.Print();
             }
@@ -155,52 +243,27 @@ namespace PrintImageForButtonMachine
 
         }
 
-        private Image SchneideBildZu(Image p_Bild, double p_Faktor)
+        /// <summary>
+        /// Schneidet einen quadratischen Ausschnitt (Anteil <see cref="_faktor"/> der kürzeren Kante) aus der Bildmitte,
+        /// skaliert ihn direkt auf die Zielgröße und zeichnet ihn kreisförmig. Es entsteht kein Zwischenbild in voller Auflösung.
+        /// </summary>
+        private void ZeichneKreisausschnitt(Graphics ziel, Image p_Bild, Rectangle zielRechteck)
         {
-            if (p_Faktor < 0 || p_Faktor > 1) throw new Exception();
+            if (_faktor < 0 || _faktor > 1) throw new ArgumentOutOfRangeException(nameof(Faktor));
 
-            var kleinsteKantenlaenge = Math.Min(p_Bild.Width, p_Bild.Height);
-            int zielgroesse = (int)(kleinsteKantenlaenge * p_Faktor);
-            using Bitmap bild = new Bitmap(p_Bild);
-            Bitmap zugeschnittenesBild = new Bitmap(zielgroesse, zielgroesse);
+            int kantenlaenge = (int)(Math.Min(p_Bild.Width, p_Bild.Height) * _faktor);
+            if (kantenlaenge <= 0 || zielRechteck.Width <= 0) return;
 
-            // Erstellen Sie ein Graphics-Objekt aus dem zugeschnittenen Bild
-            using (Graphics g = Graphics.FromImage(zugeschnittenesBild))
+            Rectangle bildausschnitt = new Rectangle((p_Bild.Width - kantenlaenge) / 2, (p_Bild.Height - kantenlaenge) / 2, kantenlaenge, kantenlaenge);
+            using Bitmap skaliert = new Bitmap(zielRechteck.Width, zielRechteck.Height);
+            using (Graphics g = Graphics.FromImage(skaliert))
             {
-                int x = (p_Bild.Width - zielgroesse) / 2;
-                int y = (p_Bild.Height - zielgroesse) / 2;
-                Rectangle bildausschnitt = new Rectangle(x, y, zielgroesse, zielgroesse);
-                Rectangle kreis = new Rectangle(0, 0, zielgroesse, zielgroesse);
-                using (Brush brush = new TextureBrush(bild, bildausschnitt))
-                {
-                    g.FillEllipse(brush, kreis);
-                }
-            }
-            return zugeschnittenesBild;
-        }
-
-        private Image SkaliereBild(Image bild, int maximaleKantenlaenge)
-        {
-            // Berechnen Sie das Skalierungsverhältnis
-            double verhaeltnisX = (double)maximaleKantenlaenge / bild.Width;
-            double verhaeltnisY = (double)maximaleKantenlaenge / bild.Height;
-            double verhaeltnis = Math.Min(verhaeltnisX, verhaeltnisY);
-
-            // Berechnen Sie die neue Breite und Höhe
-            int neueBreite = (int)(bild.Width * verhaeltnis);
-            int neueHoehe = (int)(bild.Height * verhaeltnis);
-
-            // Erstellen Sie ein neues Bild mit der neuen Breite und Höhe
-            Image neuesBild = new Bitmap(neueBreite, neueHoehe);
-
-            using (Graphics graphics = Graphics.FromImage(neuesBild))
-            {
-                // Zeichnen Sie das ursprüngliche Bild auf das neue Bild
-                graphics.DrawImage(bild, 0, 0, neueBreite, neueHoehe);
+                g.DrawImage(p_Bild, new Rectangle(0, 0, zielRechteck.Width, zielRechteck.Height), bildausschnitt, GraphicsUnit.Pixel);
             }
 
-            // Geben Sie das skalierte Bild zurück
-            return neuesBild;
+            using TextureBrush brush = new TextureBrush(skaliert);
+            brush.TranslateTransform(zielRechteck.X, zielRechteck.Y);
+            ziel.FillEllipse(brush, zielRechteck);
         }
 
         private int ErmittleAnzahlBilder(int p_verfügbareLänge, int p_LängeProBild)
