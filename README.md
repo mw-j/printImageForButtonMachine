@@ -43,3 +43,7 @@ Eine eigenständige Programmdatei, die ohne installierte Runtime läuft, erzeugt
 ```powershell
 dotnet publish PrintImageForButtonMachine -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
 ```
+
+## Lizenz
+
+[MIT](LICENSE)

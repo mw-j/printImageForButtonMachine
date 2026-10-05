@@ -76,7 +76,6 @@
             textBox_ueberwachung.Name = "textBox_ueberwachung";
             textBox_ueberwachung.Size = new Size(415, 27);
             textBox_ueberwachung.TabIndex = 1;
-            textBox_ueberwachung.Text = "bild-watch";
             textBox_ueberwachung.TextChanged += textBox_ueberwachung_TextChanged;
             // 
             // label1
@@ -128,7 +127,6 @@
             textBox_ausgabe.Name = "textBox_ausgabe";
             textBox_ausgabe.Size = new Size(415, 27);
             textBox_ausgabe.TabIndex = 4;
-            textBox_ausgabe.Text = "bild-out";
             // 
             // btn_print
             // 
