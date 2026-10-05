@@ -13,7 +13,7 @@ namespace WinFormsApp1
         public Form1()
         {
             InitializeComponent();
-            processor = new ImageProcessor(textBox_ueberwachung.Text, textBox_ausgabe.Text, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
+            processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             checker = new ImageChecker(processor);
             checker.Gestoppt += (sender, e) => DeAktiviereInputs(true);
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
@@ -178,6 +178,11 @@ namespace WinFormsApp1
             {
                 MessageBox.Show($"Die Vorschau konnte nicht erzeugt werden:\n{ex.Message}", "Fehler", MessageBoxButtons.OK);
             }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void label6_Click_1(object sender, EventArgs e)

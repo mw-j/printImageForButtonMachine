@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -13,8 +13,8 @@ namespace PrintImageForButtonMachine
     internal class ImageProcessor
     {
         private const double cmProInch = 2.54;
-        private string _ueberwachungPfad;
-        private string _ausgabePfad;
+        private TextBox _ueberwachungPfad;
+        private TextBox _ausgabePfad;
         private double _faktor; // [0,1]
         private double _groesse; // cm
         private PictureBox _pictureBox;
@@ -24,8 +24,8 @@ namespace PrintImageForButtonMachine
         private string? _vorschauSignatur; // Stand der zuletzt erzeugten Vorschau
         private bool _beschaeftigt; // verhindert parallele Verarbeitung (nur im UI-Thread verwendet)
 
-        public string UeberwachungPfad { get => _ueberwachungPfad; set => _ueberwachungPfad = value; }
-        public string AusgabePfad { get => _ausgabePfad; set => _ausgabePfad = value; }
+        public string UeberwachungPfad { get => _ueberwachungPfad.Text; set => _ueberwachungPfad.Text = value; }
+        public string AusgabePfad { get => _ausgabePfad.Text; set => _ausgabePfad.Text = value; }
         public double Faktor { get => _faktor * 100; set => _faktor = value / 100; }
         public double Groesse { get => _groesse; set => _groesse = value; }
 
@@ -35,7 +35,7 @@ namespace PrintImageForButtonMachine
         public int GroesseInPixel { get => (int)(_groesse / cmProInch * _druckerAuflösung); }
         public int AbstandInPixel { get => (int)(0.5 / cmProInch * _druckerAuflösung); }
 
-        public ImageProcessor(string p_UeberwachungPfad, string p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
+        public ImageProcessor(TextBox p_UeberwachungPfad, TextBox p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
             _ausgabePfad = p_ausgabePfad;
@@ -51,7 +51,7 @@ namespace PrintImageForButtonMachine
         /// </summary>
         public async Task PruefeOrdnerAsync()
         {
-            FileInfo[] dateien = LeseBilder(_ueberwachungPfad);
+            FileInfo[] dateien = LeseBilder(UeberwachungPfad);
             if (dateien.Length > 0 && dateien.Length >= ErmittleAnzahlBilderProSeite())
             {
                 await BearbeiteOrdnerAsync();
@@ -68,12 +68,12 @@ namespace PrintImageForButtonMachine
             _beschaeftigt = true;
             try
             {
-                FileInfo[] files = LeseBilder(_ueberwachungPfad);
+                FileInfo[] files = LeseBilder(UeberwachungPfad);
                 if (files.Length == 0) return;
 
                 // verschiebe Dateien in eigenen Ordner
                 string ordnerName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string ordnerPfad = Path.Combine(_ausgabePfad, ordnerName);
+                string ordnerPfad = Path.Combine(AusgabePfad, ordnerName);
                 var verschobeneDateien = new List<(string Quelle, string Ziel)>();
                 try
                 {
@@ -129,7 +129,7 @@ namespace PrintImageForButtonMachine
             _beschaeftigt = true;
             try
             {
-                FileInfo[] dateien = LeseBilder(_ueberwachungPfad);
+                FileInfo[] dateien = LeseBilder(UeberwachungPfad);
                 string signatur = ErzeugeSignatur(dateien);
                 if (erzwingen || signatur != _vorschauSignatur)
                 {

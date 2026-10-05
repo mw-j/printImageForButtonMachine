@@ -121,7 +121,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textBox3.Text" xml:space="preserve">
-    <value>Dieses Programm überwacht den angegebenen Ordner. Wenn in dem Ordner die angegebene Anzahl Bilder liegt, werden diese auf einem DIN A4-Blatt positioniert und auf die angegebene Größe rund zugeschnitten.
-Die Bilder und die generierte PDF-Datei werden in einem Unterordner in dem Ausgabeordner abgelegt. Ggf wird die generierte PDF automatisch gedruckt.</value>
+    <value>Dieses Programm überwacht den angegebenen Ordner. Ist die Überwachtung aktiv, werden so viele Bilder wie auf eine Seite passen, auf dieser platziert. Ist die Seite voll, wird sie automatisch gedruckt.
+Mit "Jetzt drucken" können die Bilder sofort gedruckt werden. Wenn die Bilder gedruckt werden, werden sie in einen Unterordner im Ausgabeordner kopiert und dort auch die erstellte Seite abgelegt.</value>
   </data>
 </root>
