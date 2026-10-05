@@ -24,10 +24,16 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 
 Während die Überwachung läuft, sind die Einstellungen gesperrt.
 
+## Download
+
+Die aktuelle Version gibt es unter [Releases](https://github.com/mw-j/printImageForButtonMachine/releases/latest): `PrintImageForButtonMachine.exe` herunterladen und starten, eine Installation ist nicht nötig.
+
+Da die Datei nicht signiert ist, warnt Windows SmartScreen beim ersten Start („Der Computer wurde durch Windows geschützt“). Über „Weitere Informationen“ → „Trotzdem ausführen“ lässt sich das Programm starten.
+
 ## Voraussetzungen
 
 - Windows 10 oder 11
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) zum Ausführen, bzw. das .NET 10 SDK zum Bauen
+- Zum Bauen: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0); die Release-Version bringt die Laufzeit bereits mit
 
 ## Bauen und Starten
 
