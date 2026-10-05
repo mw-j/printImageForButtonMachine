@@ -228,6 +228,7 @@ namespace PrintImageForButtonMachine
 
                 printDocument.PrintPage += (sender, args) =>
                 {
+                    if (args.Graphics == null) return;
                     args.Graphics.PageScale = 1;
                     args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, bild.Width, bild.Height);
                 };
