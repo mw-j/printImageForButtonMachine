@@ -11,6 +11,8 @@ namespace WinFormsApp1
         private ImageChecker checker;
         private readonly ProgressBar _druckFortschritt = new() { Style = ProgressBarStyle.Marquee, Size = new Size(180, 10), Visible = false };
         private int? _druckAnzahl; // gesetzt, solange eine Seite gedruckt wird
+        private readonly ToolTip _toolTip = new();
+        private int? _hoverIndex; // Kreis unter der Maus
 
         public Form1()
         {
@@ -22,6 +24,9 @@ namespace WinFormsApp1
             processor.DruckBeendet += (sender, e) => ZeigeDruck(null);
             pictureBox1.Controls.Add(_druckFortschritt);
             pictureBox1.Paint += pictureBox1_Paint;
+            pictureBox1.MouseMove += pictureBox1_MouseMove;
+            pictureBox1.MouseLeave += (sender, e) => SetzeHover(null);
+            pictureBox1.MouseDoubleClick += pictureBox1_MouseDoubleClick;
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
             textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
             num_faktor.DataBindings.Add("Value", processor, "Faktor");
@@ -78,8 +83,86 @@ namespace WinFormsApp1
             pictureBox1.Invalidate();
         }
 
+        /// <summary>
+        /// Maßstab und Versatz, mit denen die Vorschau bei <see cref="PictureBoxSizeMode.Zoom"/> angezeigt wird,
+        /// umgerechnet auf Bildschirmpixel je cm.
+        /// </summary>
+        private (float ProCm, PointF Versatz)? VorschauAbbildung()
+        {
+            Image? bild = pictureBox1.Image;
+            if (bild == null) return null;
+            Size flaeche = pictureBox1.ClientSize;
+            float skala = Math.Min((float)flaeche.Width / bild.Width, (float)flaeche.Height / bild.Height);
+            var versatz = new PointF((flaeche.Width - bild.Width * skala) / 2, (flaeche.Height - bild.Height * skala) / 2);
+            return (skala * bild.HorizontalResolution / 2.54f, versatz);
+        }
+
+        private int? KreisIndexAn(Point punkt)
+        {
+            if (VorschauAbbildung() is not var (proCm, versatz)) return null;
+            double xCm = (punkt.X - versatz.X) / proCm;
+            double yCm = (punkt.Y - versatz.Y) / proCm;
+            return new SeitenLayout(processor.GroesseCm).IndexAn(xCm, yCm, processor.VorschauDateien.Length);
+        }
+
+        private void SetzeHover(int? index)
+        {
+            if (index == _hoverIndex) return;
+            _hoverIndex = index;
+            pictureBox1.Cursor = index != null ? Cursors.Hand : Cursors.Default;
+            _toolTip.SetToolTip(pictureBox1, index != null ? "Doppelklick: Ausschnitt bearbeiten" : null);
+            pictureBox1.Invalidate();
+        }
+
+        private void pictureBox1_MouseMove(object? sender, MouseEventArgs e)
+        {
+            SetzeHover(_druckAnzahl == null ? KreisIndexAn(e.Location) : null);
+        }
+
+        private async void pictureBox1_MouseDoubleClick(object? sender, MouseEventArgs e)
+        {
+            if (_druckAnzahl != null || KreisIndexAn(e.Location) is not int index) return;
+            try
+            {
+                FileInfo foto = processor.VorschauDateien[index];
+                using Image? bild = BildLader.LadeBild(foto.FullName);
+                if (bild == null) return;
+                BildInfo? info = BildInfoSpeicher.Lade(foto.FullName);
+                List<Gesicht> gesichter = info?.Gesichter ?? [];
+                Ausschnitt automatisch = AusschnittRechner.Automatisch(bild.Width, bild.Height, gesichter, processor.FaktorAnteil, processor.GroesseCm);
+                Ausschnitt start = AusschnittRechner.Waehle(info, bild.Width, bild.Height, processor.FaktorAnteil, processor.GroesseCm);
+                SetzeHover(null);
+                processor.BearbeitungOffen = true;
+                try
+                {
+                    using var form = new AusschnittForm(bild, foto.Name, start, automatisch, processor.GroesseCm, gesichter.Count);
+                    if (form.ShowDialog(this) != DialogResult.OK) return;
+                    // Wurde das Foto inzwischen gedruckt oder gelöscht, wird nichts gespeichert
+                    BildInfoSpeicher.Speichere(foto.FullName, (info ?? new BildInfo([], null)) with { Manuell = form.Ergebnis });
+                }
+                finally
+                {
+                    processor.BearbeitungOffen = false;
+                }
+                await processor.GeneriereVorschauAsync(true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Der Ausschnitt konnte nicht bearbeitet werden:\n{ex.Message}", "Fehler", MessageBoxButtons.OK);
+            }
+        }
+
         private void pictureBox1_Paint(object? sender, PaintEventArgs e)
         {
+            if (_druckAnzahl == null && _hoverIndex is int hover && VorschauAbbildung() is var (proCm, versatz))
+            {
+                RectangleF kreisCm = new SeitenLayout(processor.GroesseCm).KreisRechteckCm(hover);
+                var kreis = new RectangleF(versatz.X + kreisCm.X * proCm, versatz.Y + kreisCm.Y * proCm, kreisCm.Width * proCm, kreisCm.Height * proCm);
+                kreis.Inflate(3, 3);
+                using var rahmen = new Pen(Color.FromArgb(0, 120, 212), 2);
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                e.Graphics.DrawEllipse(rahmen, kreis);
+            }
             if (_druckAnzahl is not int anzahl) return;
             Rectangle flaeche = pictureBox1.ClientRectangle;
             using var schleier = new SolidBrush(Color.FromArgb(210, Color.White));

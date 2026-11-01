@@ -184,7 +184,7 @@ namespace PrintImageForButtonMachine
                     // Nicht ladbare Bilder (z. B. noch im Schreibvorgang) beim nächsten Durchlauf erneut versuchen
                     _vorschauSignatur = vollstaendig ? signatur : null;
                 }
-                _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}";
+                _labelAktualisiert.Text = $"Zuletzt aktualisiert: {DateTime.Now.ToString("HH:mm:ss")}\nDoppelklick auf ein Bild zum Bearbeiten";
             }
             finally
             {
@@ -327,7 +327,7 @@ namespace PrintImageForButtonMachine
         /// </summary>
         private static void ZeichneStift(Graphics ziel, Rectangle kreis, int dpi)
         {
-            int durchmesser = InPixel(0.45, dpi);
+            int durchmesser = InPixel(0.8, dpi); // die Vorschau wird verkleinert angezeigt, kleiner wäre das Symbol nicht mehr erkennbar
             var punkt = new Rectangle(kreis.Right - durchmesser, kreis.Bottom - durchmesser, durchmesser, durchmesser);
             using var hintergrund = new SolidBrush(Color.FromArgb(0, 120, 212));
             ziel.FillEllipse(hintergrund, punkt);

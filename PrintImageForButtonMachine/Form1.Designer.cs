@@ -271,7 +271,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(941, 636);
+            ClientSize = new Size(941, 656);
             Controls.Add(label6);
             Controls.Add(comboBox_drucker);
             Controls.Add(label_Uhrzeit);
