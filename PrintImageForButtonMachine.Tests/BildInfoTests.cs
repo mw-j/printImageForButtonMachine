@@ -63,17 +63,16 @@ public sealed class BildInfoTests : IDisposable
     public void Waehle_Manuell_IgnoriertEinstellungen()
     {
         var info = new BildInfo([new Gesicht(0.3, 0.45, 0.1, 0.15)], new Ausschnitt(0.4, 0.5, 0.6));
-        var a = AusschnittRechner.Waehle(info, 3000, 2000, 0.8, 5.2);
-        var b = AusschnittRechner.Waehle(info, 3000, 2000, 0.5, 3.8);
+        var a = AusschnittRechner.Waehle(info, 3000, 2000, 5.8);
+        var b = AusschnittRechner.Waehle(info, 3000, 2000, 3.8);
         Assert.Equal(new Ausschnitt(0.4, 0.5, 0.6), a);
         Assert.Equal(a, b);
     }
 
     [Fact]
-    public void Waehle_Automatisch_FolgtFaktor()
+    public void Waehle_Automatisch_FolgtDurchmesser()
     {
-        var info = new BildInfo([], null);
-        Assert.Equal(0.8, AusschnittRechner.Waehle(info, 3000, 2000, 0.8, 5.2).Seite, 1e-4);
-        Assert.Equal(0.5, AusschnittRechner.Waehle(info, 3000, 2000, 0.5, 5.2).Seite, 1e-4);
+        var info = new BildInfo([new Gesicht(0.45, 0.40, 0.06, 0.12)], null);
+        Assert.True(AusschnittRechner.Waehle(info, 3000, 2000, 3.2).Seite > AusschnittRechner.Waehle(info, 3000, 2000, 5.8).Seite);
     }
 }

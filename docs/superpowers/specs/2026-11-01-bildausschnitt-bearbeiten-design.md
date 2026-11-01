@@ -132,6 +132,20 @@ kann ihn bei Bedarf schnell von Hand zurechtschieben und zoomen.
 - Erkennung von Kreisen per Klickposition in der Vorschau (`PictureBox` mit `SizeMode.Zoom`).
 - Ob und wie sich die Druckverzögerung zusätzlich verkürzen lässt; Pflicht ist nur die sichtbare Rückmeldung.
 
+## Nachtrag 2026-11-01: Regel aus Handkorrekturen, Prozent-Einstellung entfällt
+
+Nach einem Test hat der Nutzer fünf Fotos von Hand korrigiert (Button 5,8 cm). Muster: Er setzt den Rahmen der
+(unerweiterten) Gesichter mittig, zoomt bei Einzelpersonen deutlich hinein und schneidet Gruppen enger als die bisherige
+Automatik. Entscheidung des Nutzers: Die automatische Positionierung folgt diesem Muster, die Einstellung
+„Größe des Bildausschnitts (%)“ entfällt. Damit ersetzt dieser Nachtrag die Berechnung in Abschnitt 2:
+
+- Mitte = Mitte des Rahmens um alle erkannten Gesichter, ohne Zuschlag.
+- Größe = der größere von zwei Werten, bezogen auf den sichtbaren Kreis: Das größte Gesicht ist 61 % so hoch wie der
+  sichtbare Durchmesser; die halbe Diagonale des Gesichtsrahmens erreicht 93 % des sichtbaren Radius. Hineinzoomen ist
+  damit erlaubt.
+- Ohne Gesicht: mittig über die kürzere Bildkante.
+- Abweichung zu den fünf Handkorrekturen: Größe meist unter 2 % (einmal 8 %), Mitte unter 4,2 % des Kreisdurchmessers.
+
 ## Reihenfolge und Vorab-Test *(Entscheidung Claude)*
 
 Die Qualität der Windows-Gesichtserkennung bei den realen Motiven (Kinder, Halbprofil, mehrere Personen) und die

@@ -18,7 +18,7 @@ namespace WinFormsApp1
         public Form1()
         {
             InitializeComponent();
-            processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
+            processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             checker = new ImageChecker(processor);
             checker.Gestoppt += (sender, e) => DeAktiviereInputs(true);
             // Ein manueller Druck kann auf einen laufenden warten; die Anzeige endet erst mit dem letzten
@@ -31,7 +31,6 @@ namespace WinFormsApp1
             pictureBox1.MouseDoubleClick += pictureBox1_MouseDoubleClick;
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
             textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
-            num_faktor.DataBindings.Add("Value", processor, "Faktor");
             num_groesse.DataBindings.Add("Value", processor, "Groesse");
             //pictureBox1.DataBindings.Add("Image", processor, "VorschauBild");
 
@@ -131,8 +130,8 @@ namespace WinFormsApp1
                 if (bild == null) return;
                 BildInfo? info = BildInfoSpeicher.Lade(foto.FullName);
                 List<Gesicht> gesichter = info?.Gesichter ?? [];
-                Ausschnitt automatisch = AusschnittRechner.Automatisch(bild.Width, bild.Height, gesichter, processor.FaktorAnteil, processor.GroesseCm);
-                Ausschnitt start = AusschnittRechner.Waehle(info, bild.Width, bild.Height, processor.FaktorAnteil, processor.GroesseCm);
+                Ausschnitt automatisch = AusschnittRechner.Automatisch(bild.Width, bild.Height, gesichter, processor.GroesseCm);
+                Ausschnitt start = AusschnittRechner.Waehle(info, bild.Width, bild.Height, processor.GroesseCm);
                 SetzeHover(null);
                 processor.BearbeitungOffen = true;
                 try
@@ -182,7 +181,6 @@ namespace WinFormsApp1
             btn_ueberwachung.Enabled = wert;
             textBox_ausgabe.Enabled = wert;
             btn_ausgabe.Enabled = wert;
-            num_faktor.Enabled = wert;
             num_groesse.Enabled = wert;
             label_aktivIcon.Visible = !wert;
             label_aktivText.Visible = !wert;
@@ -221,11 +219,6 @@ namespace WinFormsApp1
         }
 
         private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click_1(object sender, EventArgs e)
         {
 
         }

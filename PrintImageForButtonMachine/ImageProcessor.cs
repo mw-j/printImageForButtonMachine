@@ -17,7 +17,6 @@ namespace PrintImageForButtonMachine
         private const int DruckDpi = 300; // mehr bringt auch bei 600-dpi-Laserdruckern keinen sichtbaren Gewinn
         private TextBox _ueberwachungPfad;
         private TextBox _ausgabePfad;
-        private double _faktor; // [0,1]
         private double _groesse; // cm
         private PictureBox _pictureBox;
         private Label _labelAktualisiert;
@@ -27,10 +26,8 @@ namespace PrintImageForButtonMachine
 
         public string UeberwachungPfad { get => _ueberwachungPfad.Text; set => _ueberwachungPfad.Text = value; }
         public string AusgabePfad { get => _ausgabePfad.Text; set => _ausgabePfad.Text = value; }
-        public double Faktor { get => _faktor * 100; set => _faktor = value / 100; }
         public double Groesse { get => _groesse; set => _groesse = value; }
         public double GroesseCm => _groesse;
-        public double FaktorAnteil => _faktor;
 
         /// <summary>
         /// Fotos in der Reihenfolge der zuletzt erzeugten Vorschau.
@@ -48,11 +45,10 @@ namespace PrintImageForButtonMachine
         public event EventHandler<int>? DruckGestartet;
         public event EventHandler? DruckBeendet;
 
-        public ImageProcessor(TextBox p_UeberwachungPfad, TextBox p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
+        public ImageProcessor(TextBox p_UeberwachungPfad, TextBox p_ausgabePfad, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
             _ausgabePfad = p_ausgabePfad;
-            _faktor = p_Faktor / 100;
             _groesse = p_Groesse;
             _pictureBox = p_PictureBox;
             _labelAktualisiert = labelAktualisiert;
@@ -226,7 +222,7 @@ namespace PrintImageForButtonMachine
         private string ErzeugeSignatur(FileInfo[] dateien)
         {
             var signatur = new StringBuilder();
-            signatur.Append(_faktor).Append('|').Append(_groesse);
+            signatur.Append(_groesse);
             foreach (FileInfo datei in dateien)
             {
                 signatur.Append('|').Append(datei.Name).Append(':').Append(datei.Length).Append(':').Append(datei.LastWriteTimeUtc.Ticks);
@@ -265,7 +261,7 @@ namespace PrintImageForButtonMachine
                         continue;
                     }
                     BildInfo? info = BildInfoSpeicher.Lade(dateien[i].FullName);
-                    Ausschnitt ausschnitt = AusschnittRechner.Waehle(info, image.Width, image.Height, _faktor, groesseCm);
+                    Ausschnitt ausschnitt = AusschnittRechner.Waehle(info, image.Width, image.Height, groesseCm);
                     // Position in cm berechnen und erst dann umrechnen, damit sich Rundungsfehler nicht aufsummieren
                     RectangleF kreisCm = layout.KreisRechteckCm(i);
                     int x = InPixel(kreisCm.X, dpi);

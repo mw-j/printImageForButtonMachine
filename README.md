@@ -8,7 +8,7 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 
 - **Ordnerüberwachung:** prüft alle 2 Sekunden den überwachten Ordner auf neue `*.jpg`-Dateien
 - **Live-Vorschau** der aktuellen Seite, wird nur bei Änderungen neu berechnet
-- **Automatische Ausrichtung:** Neue Fotos werden einmalig auf Gesichter untersucht (in Windows eingebaute Erkennung, offline). Der Kreis wird auf die Gesichter zentriert und, falls nötig, so weit vergrößert, dass alle Gesichter im später sichtbaren Bereich liegen. Ohne erkanntes Gesicht wird die Bildmitte verwendet.
+- **Automatische Ausrichtung:** Neue Fotos werden einmalig auf Gesichter untersucht (in Windows eingebaute Erkennung, offline). Der Kreis wird auf die Gesichter zentriert; bei Einzelpersonen bestimmt die Gesichtsgröße den Zoom, bei Gruppen der Abstand der Gesichter, sodass alle im später sichtbaren Bereich liegen. Ohne erkanntes Gesicht wird mittig über die volle Bildhöhe ausgeschnitten.
 - **Ausschnitt von Hand anpassen:** Doppelklick auf einen Kreis in der Vorschau öffnet ein Bearbeiten-Fenster. Ziehen verschiebt das Foto, das Mausrad zoomt. Ein gestrichelter Hilfskreis (Radius 4 mm kleiner) zeigt, was nach dem Pressen auf dem Button sichtbar bleibt. Von Hand angepasste Kreise tragen in der Vorschau ein Stift-Symbol; „Automatisch“ stellt den Vorschlag wieder her.
 - **Begleitdateien:** Erkannte Gesichter und Handkorrekturen liegen als `<Foto>.button.json` neben dem Foto und bleiben über einen Neustart erhalten
 - **Automatischer Druck**, sobald so viele Bilder vorhanden sind, wie auf eine Seite passen
@@ -24,7 +24,6 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 | Überwachter Ordner | Ordner, in dem neue Fotos erwartet werden |
 | Ausgabeordner | Ziel für die verschobenen Fotos und die gedruckten Seiten; muss sich vom überwachten Ordner unterscheiden |
 | Drucker | Drucker, auf dem die Seiten ausgegeben werden |
-| Größe des Bildausschnitts (%) | Anteil der kürzeren Bildkante, der als Kreis ausgeschnitten wird; die Mitte folgt den erkannten Gesichtern. Gilt für alle nicht von Hand angepassten Fotos |
 | Durchmesser der Bilder (cm) | Durchmesser der Kreise auf der gedruckten Seite, passend zur Buttongröße |
 
 Während die Überwachung läuft, sind die Einstellungen gesperrt.

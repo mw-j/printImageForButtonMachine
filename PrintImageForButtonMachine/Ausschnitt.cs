@@ -1,4 +1,4 @@
-namespace PrintImageForButtonMachine
+﻿namespace PrintImageForButtonMachine
 {
     /// <summary>
     /// Erkanntes Gesicht, relativ zu Bildbreite und -höhe (0..1).
@@ -18,41 +18,39 @@ namespace PrintImageForButtonMachine
         public const double RandCm = 0.4;
         private const double MinSeite = 0.1;
 
-        // Zuschlag um jedes Gesicht, damit Haare und Kinn mit in den sichtbaren Bereich kommen
-        private const double ZuschlagSeitlich = 0.15, ZuschlagOben = 0.40, ZuschlagUnten = 0.15;
+        // Abgeleitet aus Handkorrekturen vom ersten Einsatz (Button 5,8 cm), bezogen auf den sichtbaren Kreis:
+        // Das größte Gesicht ist so hoch wie dieser Anteil des sichtbaren Durchmessers ...
+        private const double GesichtsAnteil = 0.61;
+        // ... und der Rahmen um alle Gesichter reicht mit seiner halben Diagonale bis zu diesem Anteil des sichtbaren Radius.
+        private const double FuellGrad = 0.93;
 
         /// <summary>
-        /// Größe aus der Prozent-Einstellung, Mitte auf den Gesichtern. Herausgezoomt wird nur, wenn die Gesichter
-        /// sonst nicht in den sichtbaren Bereich passen, hineingezoomt nie.
+        /// Mitte auf den Gesichtern; die Größe richtet sich nach dem größten Gesicht oder, bei Gruppen, nach dem Abstand
+        /// der Gesichter. Ohne Gesicht: mittig über die kürzere Bildkante.
         /// </summary>
-        /// <param name="faktor">Anteil der kürzeren Bildkante [0,1]</param>
-        public static Ausschnitt Automatisch(int breite, int hoehe, IReadOnlyList<Gesicht> gesichter, double faktor, double durchmesserCm)
+        public static Ausschnitt Automatisch(int breite, int hoehe, IReadOnlyList<Gesicht> gesichter, double durchmesserCm)
         {
             double kurz = Math.Min(breite, hoehe);
-            double seite = kurz * faktor;
-            double cx = breite / 2.0, cy = hoehe / 2.0;
-            if (gesichter.Count > 0)
-            {
-                double l = gesichter.Min(g => (g.X - g.Breite * ZuschlagSeitlich) * breite);
-                double r = gesichter.Max(g => (g.X + g.Breite * (1 + ZuschlagSeitlich)) * breite);
-                double o = gesichter.Min(g => (g.Y - g.Hoehe * ZuschlagOben) * hoehe);
-                double u = gesichter.Max(g => (g.Y + g.Hoehe * (1 + ZuschlagUnten)) * hoehe);
-                cx = (l + r) / 2;
-                cy = (o + u) / 2;
-                double innenAnteil = (durchmesserCm - 2 * RandCm) / durchmesserCm;
-                double benoetigt = 2 * Math.Sqrt(Math.Pow((r - l) / 2, 2) + Math.Pow((u - o) / 2, 2)) / innenAnteil;
-                if (benoetigt > seite) seite = Math.Min(benoetigt, kurz);
-            }
-            return Begrenze(new Ausschnitt(cx / breite, cy / hoehe, seite / kurz), breite, hoehe);
+            if (gesichter.Count == 0) return new Ausschnitt(0.5, 0.5, 1);
+
+            double l = gesichter.Min(g => g.X) * breite;
+            double r = gesichter.Max(g => g.X + g.Breite) * breite;
+            double o = gesichter.Min(g => g.Y) * hoehe;
+            double u = gesichter.Max(g => g.Y + g.Hoehe) * hoehe;
+            double innenAnteil = (durchmesserCm - 2 * RandCm) / durchmesserCm;
+            double nachGesicht = gesichter.Max(g => g.Hoehe) * hoehe / (GesichtsAnteil * innenAnteil);
+            double nachAbstand = 2 * Math.Sqrt(Math.Pow((r - l) / 2, 2) + Math.Pow((u - o) / 2, 2)) / (FuellGrad * innenAnteil);
+            double seite = Math.Max(nachGesicht, nachAbstand);
+            return Begrenze(new Ausschnitt((l + r) / 2 / breite, (o + u) / 2 / hoehe, seite / kurz), breite, hoehe);
         }
 
         /// <summary>
-        /// Handkorrektur hat Vorrang; automatische Ausschnitte folgen den aktuellen Einstellungen.
+        /// Handkorrektur hat Vorrang; automatische Ausschnitte folgen dem eingestellten Durchmesser.
         /// </summary>
-        public static Ausschnitt Waehle(BildInfo? info, int breite, int hoehe, double faktor, double durchmesserCm)
+        public static Ausschnitt Waehle(BildInfo? info, int breite, int hoehe, double durchmesserCm)
         {
             if (info?.Manuell != null) return Begrenze(info.Manuell, breite, hoehe);
-            return Automatisch(breite, hoehe, info?.Gesichter ?? [], faktor, durchmesserCm);
+            return Automatisch(breite, hoehe, info?.Gesichter ?? [], durchmesserCm);
         }
 
         /// <summary>

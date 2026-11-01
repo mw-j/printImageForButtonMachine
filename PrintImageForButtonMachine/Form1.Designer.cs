@@ -39,8 +39,6 @@
             textBox_ausgabe = new TextBox();
             btn_print = new Button();
             textBox3 = new TextBox();
-            label3 = new Label();
-            num_faktor = new NumericUpDown();
             num_groesse = new NumericUpDown();
             label4 = new Label();
             label_aktivIcon = new Label();
@@ -50,7 +48,6 @@
             label_Uhrzeit = new Label();
             comboBox_drucker = new ComboBox();
             label6 = new Label();
-            ((System.ComponentModel.ISupportInitialize)num_faktor).BeginInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
@@ -151,30 +148,10 @@
             textBox3.Text = resources.GetString("textBox3.Text");
             textBox3.TextChanged += textBox3_TextChanged;
             // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(14, 357);
-            label3.Name = "label3";
-            label3.Size = new Size(203, 20);
-            label3.TabIndex = 11;
-            label3.Text = "Größe des Bildausschnitts (%)";
-            label3.Click += label3_Click_1;
-            // 
-            // num_faktor
-            // 
-            num_faktor.Location = new Point(221, 355);
-            num_faktor.Margin = new Padding(3, 4, 3, 4);
-            num_faktor.Maximum = new decimal(new int[] { 99, 0, 0, 0 });
-            num_faktor.Name = "num_faktor";
-            num_faktor.Size = new Size(46, 27);
-            num_faktor.TabIndex = 12;
-            num_faktor.Value = new decimal(new int[] { 80, 0, 0, 0 });
-            // 
             // num_groesse
             // 
             num_groesse.DecimalPlaces = 2;
-            num_groesse.Location = new Point(213, 393);
+            num_groesse.Location = new Point(213, 355);
             num_groesse.Margin = new Padding(3, 4, 3, 4);
             num_groesse.Maximum = new decimal(new int[] { 999, 0, 0, 131072 });
             num_groesse.Name = "num_groesse";
@@ -186,7 +163,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(14, 396);
+            label4.Location = new Point(14, 358);
             label4.Name = "label4";
             label4.Size = new Size(197, 20);
             label4.TabIndex = 13;
@@ -281,8 +258,6 @@
             Controls.Add(label_aktivIcon);
             Controls.Add(num_groesse);
             Controls.Add(label4);
-            Controls.Add(num_faktor);
-            Controls.Add(label3);
             Controls.Add(textBox3);
             Controls.Add(btn_print);
             Controls.Add(btn_ausgabe);
@@ -298,7 +273,6 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Bilder für Button-Maschine generieren";
             Load += Form1_Load;
-            ((System.ComponentModel.ISupportInitialize)num_faktor).EndInit();
             ((System.ComponentModel.ISupportInitialize)num_groesse).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
@@ -317,8 +291,6 @@
         private TextBox textBox_ausgabe;
         private Button btn_print;
         private TextBox textBox3;
-        private Label label3;
-        private NumericUpDown num_faktor;
         private NumericUpDown num_groesse;
         private Label label4;
         private Label label_aktivIcon;

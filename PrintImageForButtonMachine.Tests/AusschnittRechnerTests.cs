@@ -6,7 +6,7 @@ namespace PrintImageForButtonMachine.Tests;
 public class AusschnittRechnerTests
 {
     private const int Breite = 3000, Hoehe = 2000;
-    private const double Faktor = 0.8, DurchmesserCm = 5.2;
+    private const double DurchmesserCm = 5.8;
 
     private static void Gleich(Ausschnitt erwartet, Ausschnitt ist, double toleranz = 1e-4)
     {
@@ -16,53 +16,58 @@ public class AusschnittRechnerTests
     }
 
     [Fact]
-    public void OhneGesichter_Mittig()
+    public void OhneGesichter_MittigVolleHoehe()
     {
-        Gleich(new Ausschnitt(0.5, 0.5, 0.8), AusschnittRechner.Automatisch(Breite, Hoehe, [], Faktor, DurchmesserCm));
+        Gleich(new Ausschnitt(0.5, 0.5, 1.0), AusschnittRechner.Automatisch(Breite, Hoehe, [], DurchmesserCm));
     }
 
     [Fact]
-    public void OhneGesichter_Hochformat_Mittig()
+    public void OhneGesichter_Hochformat_MittigVolleBreite()
     {
-        Gleich(new Ausschnitt(0.5, 0.5, 0.8), AusschnittRechner.Automatisch(Hoehe, Breite, [], Faktor, DurchmesserCm));
+        Gleich(new Ausschnitt(0.5, 0.5, 1.0), AusschnittRechner.Automatisch(Hoehe, Breite, [], DurchmesserCm));
     }
 
     [Fact]
-    public void EinGesicht_MitteWandert_GroesseBleibt()
+    public void EinGesicht_GesichtshoeheBestimmtGroesse()
     {
-        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe, [new Gesicht(0.30, 0.45, 0.10, 0.15)], Faktor, DurchmesserCm);
-        Gleich(new Ausschnitt(0.35, 0.50625, 0.8), ergebnis);
+        // Gesicht 240 px hoch → 61 % des sichtbaren Kreises (Anteil 5,0 / 5,8) → Seite 456,4 px
+        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe, [new Gesicht(0.45, 0.40, 0.06, 0.12)], DurchmesserCm);
+        Gleich(new Ausschnitt(0.48, 0.46, 0.22820), ergebnis);
     }
 
     [Fact]
-    public void EinGesicht_AmOberenRand_WirdBegrenzt()
+    public void ZweiGesichter_AbstandBestimmtGroesse()
     {
-        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe, [new Gesicht(0.45, 0.30, 0.10, 0.15)], Faktor, DurchmesserCm);
-        Gleich(new Ausschnitt(0.5, 0.4, 0.8), ergebnis);
+        // Rahmen 900..1980 × 800..1080, halbe Diagonale 557,9 px = 93 % des sichtbaren Radius → Seite 1391,6 px
+        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe,
+            [new Gesicht(0.30, 0.40, 0.06, 0.12), new Gesicht(0.60, 0.42, 0.06, 0.12)], DurchmesserCm);
+        Gleich(new Ausschnitt(0.48, 0.47, 0.69582), ergebnis, 2e-4);
     }
 
     [Fact]
-    public void ZweiGesichter_ZoomtHeraus()
+    public void WeitVerteilteGesichter_HoechstensKuerzereKante()
     {
         var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe,
-            [new Gesicht(0.25, 0.45, 0.10, 0.15), new Gesicht(0.65, 0.45, 0.10, 0.15)], Faktor, DurchmesserCm);
-        Gleich(new Ausschnitt(0.5, 0.50625, 0.97890), ergebnis, 1e-3);
+            [new Gesicht(0.10, 0.40, 0.06, 0.12), new Gesicht(0.45, 0.40, 0.06, 0.12), new Gesicht(0.80, 0.40, 0.06, 0.12)],
+            DurchmesserCm);
+        Assert.Equal(1.0, ergebnis.Seite, 1e-4);
+        Assert.Equal(0.5, ergebnis.MitteY, 1e-4);
     }
 
     [Fact]
-    public void DreiGesichter_HoechstensKuerzereKante()
+    public void GesichtAmRand_WirdInsBildGeschoben()
     {
-        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe,
-            [new Gesicht(0.20, 0.45, 0.10, 0.15), new Gesicht(0.45, 0.45, 0.10, 0.15), new Gesicht(0.70, 0.45, 0.10, 0.15)],
-            Faktor, DurchmesserCm);
-        Gleich(new Ausschnitt(0.5, 0.5, 1.0), ergebnis);
+        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe, [new Gesicht(0.0, 0.40, 0.06, 0.12)], DurchmesserCm);
+        Assert.Equal(456.39 / 2 / Breite, ergebnis.MitteX, 1e-4);
     }
 
     [Fact]
-    public void KleinesGesicht_ZoomtNieHinein()
+    public void KleinererButton_GroessererAusschnitt()
     {
-        var ergebnis = AusschnittRechner.Automatisch(Breite, Hoehe, [new Gesicht(0.49, 0.45, 0.02, 0.03)], Faktor, DurchmesserCm);
-        Assert.Equal(0.8, ergebnis.Seite, 1e-4);
+        Gesicht[] gesicht = [new Gesicht(0.45, 0.40, 0.06, 0.12)];
+        double gross = AusschnittRechner.Automatisch(Breite, Hoehe, gesicht, 5.8).Seite;
+        double klein = AusschnittRechner.Automatisch(Breite, Hoehe, gesicht, 3.2).Seite;
+        Assert.True(klein > gross);
     }
 
     [Fact]
