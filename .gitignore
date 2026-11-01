@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Lokale Testfotos, nicht veröffentlichen
+test-bilder/
+.superpowers/
