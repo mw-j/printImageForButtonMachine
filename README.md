@@ -1,6 +1,6 @@
 # PrintImageForButtonMachine
 
-Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es überwacht einen Ordner, in dem z. B. eine Fotobox ihre Aufnahmen ablegt, schneidet jedes Foto kreisrund zu und ordnet die Kreise auf einer A4-Seite an. Sobald die Seite voll ist, wird sie automatisch gedruckt.
+Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es überwacht einen Ordner, in dem z. B. eine Fotobox ihre Aufnahmen ablegt, richtet jedes Foto auf die Gesichter aus, schneidet es kreisrund zu und ordnet die Kreise auf einer A4-Seite an. Sobald die Seite voll ist, wird sie automatisch gedruckt.
 
 ![Screenshot des Programms](docs/screenshot.png)
 
@@ -8,10 +8,14 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 
 - **Ordnerüberwachung:** prüft alle 2 Sekunden den überwachten Ordner auf neue `*.jpg`-Dateien
 - **Live-Vorschau** der aktuellen Seite, wird nur bei Änderungen neu berechnet
+- **Automatische Ausrichtung:** Neue Fotos werden einmalig auf Gesichter untersucht (in Windows eingebaute Erkennung, offline). Der Kreis wird auf die Gesichter zentriert und, falls nötig, so weit vergrößert, dass alle Gesichter im später sichtbaren Bereich liegen. Ohne erkanntes Gesicht wird die Bildmitte verwendet.
+- **Ausschnitt von Hand anpassen:** Doppelklick auf einen Kreis in der Vorschau öffnet ein Bearbeiten-Fenster. Ziehen verschiebt das Foto, das Mausrad zoomt. Ein gestrichelter Hilfskreis (Radius 4 mm kleiner) zeigt, was nach dem Pressen auf dem Button sichtbar bleibt. Von Hand angepasste Kreise tragen in der Vorschau ein Stift-Symbol; „Automatisch“ stellt den Vorschlag wieder her.
+- **Begleitdateien:** Erkannte Gesichter und Handkorrekturen liegen als `<Foto>.button.json` neben dem Foto und bleiben über einen Neustart erhalten
 - **Automatischer Druck**, sobald so viele Bilder vorhanden sind, wie auf eine Seite passen
-- **Manueller Druck** über „Jetzt drucken“, auch wenn die Seite noch nicht voll ist
+- **Manueller Druck** über „Jetzt drucken“, auch wenn die Seite noch nicht voll ist; während die Seite aufbereitet und gedruckt wird, zeigt die Vorschau „Seite wird gedruckt …“
+- Solange ein Bearbeiten-Fenster offen ist, wird nicht automatisch gedruckt
 - **Druck in Originalgröße mit 300 dpi**: Die Kreise haben auf dem Papier exakt den eingestellten Durchmesser
-- **Archivierung:** Vor dem Druck werden die Fotos in einen Unterordner mit Zeitstempel im Ausgabeordner verschoben; die gedruckte Seite wird dort als `print.jpg` abgelegt
+- **Archivierung:** Vor dem Druck werden die Fotos in einen Unterordner mit Zeitstempel im Ausgabeordner verschoben; die Begleitdateien wandern mit, die gedruckte Seite wird dort als `print.jpg` abgelegt
 
 ## Einstellungen
 
@@ -20,7 +24,7 @@ Windows-Programm, das Fotos für eine Buttonmaschine druckfertig aufbereitet. Es
 | Überwachter Ordner | Ordner, in dem neue Fotos erwartet werden |
 | Ausgabeordner | Ziel für die verschobenen Fotos und die gedruckten Seiten; muss sich vom überwachten Ordner unterscheiden |
 | Drucker | Drucker, auf dem die Seiten ausgegeben werden |
-| Größe des Bildausschnitts (%) | Anteil der kürzeren Bildkante, der als Kreis aus der Bildmitte ausgeschnitten wird |
+| Größe des Bildausschnitts (%) | Anteil der kürzeren Bildkante, der als Kreis ausgeschnitten wird; die Mitte folgt den erkannten Gesichtern. Gilt für alle nicht von Hand angepassten Fotos |
 | Durchmesser der Bilder (cm) | Durchmesser der Kreise auf der gedruckten Seite, passend zur Buttongröße |
 
 Während die Überwachung läuft, sind die Einstellungen gesperrt.
@@ -33,7 +37,7 @@ Da die Datei nicht signiert ist, warnt Windows SmartScreen beim ersten Start (�
 
 ## Voraussetzungen
 
-- Windows 10 oder 11
+- Windows 10 (ab Version 2004) oder 11
 - Zum Bauen: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0); die Release-Version bringt die Laufzeit bereits mit
 
 ## Bauen und Starten
