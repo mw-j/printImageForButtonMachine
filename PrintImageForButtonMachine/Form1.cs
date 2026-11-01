@@ -11,6 +11,7 @@ namespace WinFormsApp1
         private ImageChecker checker;
         private readonly ProgressBar _druckFortschritt = new() { Style = ProgressBarStyle.Marquee, Size = new Size(180, 10), Visible = false };
         private int? _druckAnzahl; // gesetzt, solange eine Seite gedruckt wird
+        private int _laufendeDrucke;
         private readonly ToolTip _toolTip = new();
         private int? _hoverIndex; // Kreis unter der Maus
 
@@ -20,8 +21,9 @@ namespace WinFormsApp1
             processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             checker = new ImageChecker(processor);
             checker.Gestoppt += (sender, e) => DeAktiviereInputs(true);
-            processor.DruckGestartet += (sender, anzahl) => ZeigeDruck(anzahl);
-            processor.DruckBeendet += (sender, e) => ZeigeDruck(null);
+            // Ein manueller Druck kann auf einen laufenden warten; die Anzeige endet erst mit dem letzten
+            processor.DruckGestartet += (sender, anzahl) => { _laufendeDrucke++; ZeigeDruck(anzahl); };
+            processor.DruckBeendet += (sender, e) => { if (--_laufendeDrucke == 0) ZeigeDruck(null); };
             pictureBox1.Controls.Add(_druckFortschritt);
             pictureBox1.Paint += pictureBox1_Paint;
             pictureBox1.MouseMove += pictureBox1_MouseMove;

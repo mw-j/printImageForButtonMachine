@@ -77,15 +77,29 @@ namespace PrintImageForButtonMachine
 
         public async Task BearbeiteOrdnerAsync()
         {
-            if (_beschaeftigt) return;
-            _beschaeftigt = true;
-            bool druckGestartet = false;
+            FileInfo[] vorab = ErsteSeite(LeseBilder(UeberwachungPfad), _groesse);
+            if (vorab.Length == 0) return;
+            DruckGestartet?.Invoke(this, vorab.Length);
             try
             {
-                FileInfo[] files = LeseBilder(UeberwachungPfad);
+                // Läuft gerade eine Vorschau oder ein anderer Druck, wird gewartet, statt den Auftrag zu verschlucken
+                while (_beschaeftigt) await Task.Delay(100);
+                await DruckeSeiteAsync();
+            }
+            finally
+            {
+                DruckBeendet?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private async Task DruckeSeiteAsync()
+        {
+            _beschaeftigt = true;
+            try
+            {
+                // Nur eine Seite; weitere Fotos bleiben für die nächste Seite im Ordner
+                FileInfo[] files = ErsteSeite(LeseBilder(UeberwachungPfad), _groesse);
                 if (files.Length == 0) return;
-                DruckGestartet?.Invoke(this, files.Length);
-                druckGestartet = true;
                 await Gesichtserkennung.ErgaenzeFehlendeAsync(files);
 
                 // verschiebe Dateien in eigenen Ordner
@@ -119,7 +133,6 @@ namespace PrintImageForButtonMachine
             finally
             {
                 _beschaeftigt = false;
-                if (druckGestartet) DruckBeendet?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -170,7 +183,7 @@ namespace PrintImageForButtonMachine
             _beschaeftigt = true;
             try
             {
-                FileInfo[] dateien = LeseBilder(UeberwachungPfad);
+                FileInfo[] dateien = ErsteSeite(LeseBilder(UeberwachungPfad), _groesse);
                 await Gesichtserkennung.ErgaenzeFehlendeAsync(dateien);
                 string signatur = ErzeugeSignatur(dateien);
                 if (erzwingen || signatur != _vorschauSignatur)
@@ -190,6 +203,14 @@ namespace PrintImageForButtonMachine
             {
                 _beschaeftigt = false;
             }
+        }
+
+        /// <summary>
+        /// Die Fotos, die auf eine Seite passen, in der Reihenfolge von Vorschau und Druck.
+        /// </summary>
+        internal static FileInfo[] ErsteSeite(FileInfo[] dateien, double groesseCm)
+        {
+            return dateien.Take(new SeitenLayout(groesseCm).BilderProSeite).ToArray();
         }
 
         public int ErmittleAnzahlBilderProSeite()

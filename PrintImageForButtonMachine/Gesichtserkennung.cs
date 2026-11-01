@@ -1,4 +1,4 @@
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -13,10 +13,11 @@ namespace PrintImageForButtonMachine
     internal static class Gesichtserkennung
     {
         private const int ErkennungsKante = 1500; // genügt für Gesichter und hält die Erkennung auch auf älteren Rechnern schnell
-        private static readonly Lazy<Task<FaceDetector>> Detektor = new(() => FaceDetector.CreateAsync().AsTask());
+        private static Task<FaceDetector>? _detektor;
 
-        /// <returns>Leere Liste, wenn Windows keine Gesichtserkennung bietet (z. B. N-Editionen) oder sie fehlschlägt.</returns>
-        public static async Task<List<Gesicht>> ErkenneAsync(Image bild)
+        /// <returns>Leere Liste, wenn Windows keine Gesichtserkennung bietet (z. B. N-Editionen);
+        /// null, wenn die Erkennung fehlschlägt und später erneut versucht werden soll.</returns>
+        public static async Task<List<Gesicht>?> ErkenneAsync(Image bild)
         {
             try
             {
@@ -24,7 +25,7 @@ namespace PrintImageForButtonMachine
                 (byte[] grau, int breite, int hoehe) = await Task.Run(() => ErzeugeGraustufen(bild));
                 using var bitmap = new SoftwareBitmap(BitmapPixelFormat.Gray8, breite, hoehe);
                 bitmap.CopyFromBuffer(grau.AsBuffer());
-                FaceDetector detektor = await Detektor.Value;
+                FaceDetector detektor = await (_detektor ??= FaceDetector.CreateAsync().AsTask());
                 IList<DetectedFace> gesichter = await detektor.DetectFacesAsync(bitmap);
                 return gesichter
                     .Select(g => new Gesicht((double)g.FaceBox.X / breite, (double)g.FaceBox.Y / hoehe, (double)g.FaceBox.Width / breite, (double)g.FaceBox.Height / hoehe))
@@ -32,8 +33,9 @@ namespace PrintImageForButtonMachine
             }
             catch (Exception)
             {
-                // Ohne Erkennung bleibt es beim mittigen Ausschnitt; das Programm soll deswegen nicht stehen bleiben
-                return [];
+                // Das Programm soll deswegen nicht stehen bleiben; ein fehlgeschlagenes Erzeugen wird beim nächsten Mal wiederholt
+                _detektor = null;
+                return null;
             }
         }
 
@@ -45,11 +47,19 @@ namespace PrintImageForButtonMachine
         {
             foreach (FileInfo foto in fotos)
             {
-                if (BildInfoSpeicher.Lade(foto.FullName) != null) continue;
+                if (!BildInfoSpeicher.BrauchtErkennung(foto.FullName)) continue;
                 using Image? bild = await Task.Run(() => BildLader.LadeBild(foto.FullName));
                 if (bild == null) continue;
-                List<Gesicht> gesichter = await ErkenneAsync(bild);
-                BildInfoSpeicher.Speichere(foto.FullName, new BildInfo(gesichter, null));
+                List<Gesicht>? gesichter = await ErkenneAsync(bild);
+                if (gesichter == null) continue;
+                try
+                {
+                    BildInfoSpeicher.Speichere(foto.FullName, new BildInfo(gesichter, null));
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    // z. B. kurz von einem Virenscanner gesperrt; die Überwachung läuft weiter, nächster Durchlauf versucht es erneut
+                }
             }
         }
 

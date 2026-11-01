@@ -40,3 +40,17 @@ public class SeitenLayoutTests
         Assert.Equal(5.2f, r.Height, 1e-4f);
     }
 }
+
+public class ErsteSeiteTests
+{
+    [Fact]
+    public void ErsteSeite_NurSovieleWieAufEineSeitePassen()
+    {
+        FileInfo[] dateien = Enumerable.Range(0, 17).Select(i => new FileInfo($@"C:\x\IMG_{i:00}.jpg")).ToArray();
+
+        FileInfo[] seite = ImageProcessor.ErsteSeite(dateien, 5.2);
+
+        Assert.Equal(15, seite.Length);
+        Assert.Equal(dateien.Take(15), seite);
+    }
+}

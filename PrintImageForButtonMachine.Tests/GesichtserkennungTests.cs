@@ -52,4 +52,43 @@ public sealed class GesichtserkennungTests : IDisposable
         Assert.Equal(vorher.Gesichter, nachher.Gesichter);
         Assert.Equal(vorher.Manuell, nachher.Manuell);
     }
+
+    [Fact]
+    public async Task ErgaenzeFehlende_FotoNachSchreibenFertig_WirdNeuErkannt()
+    {
+        byte[] ganz = TestBilder.Jpeg(400, 300);
+        FileInfo foto = LegeFotoAn("im_schreiben.jpg", ganz.Take(ganz.Length / 2).ToArray());
+        await Gesichtserkennung.ErgaenzeFehlendeAsync([foto]);
+
+        File.WriteAllBytes(foto.FullName, ganz);
+
+        // Die Begleitdatei gehört zum halben Foto und darf für das fertige nicht mehr gelten
+        Assert.Null(BildInfoSpeicher.Lade(foto.FullName));
+        await Gesichtserkennung.ErgaenzeFehlendeAsync([new FileInfo(foto.FullName)]);
+        Assert.NotNull(BildInfoSpeicher.Lade(foto.FullName));
+    }
+
+    [Fact]
+    public async Task ErgaenzeFehlende_BegleitdateiNichtSchreibbar_KeinFehler()
+    {
+        FileInfo foto = LegeFotoAn("gesperrt.jpg", TestBilder.Jpeg(400, 300));
+        Directory.CreateDirectory(BildInfoSpeicher.PfadFuer(foto.FullName));
+
+        await Gesichtserkennung.ErgaenzeFehlendeAsync([foto]);
+    }
+
+    [Fact]
+    public async Task ErgaenzeFehlende_BegleitdateiKurzNichtLesbar_HandkorrekturBleibt()
+    {
+        FileInfo foto = LegeFotoAn("korrigiert.jpg", TestBilder.Jpeg(400, 300));
+        BildInfoSpeicher.Speichere(foto.FullName, new BildInfo([], new Ausschnitt(0.4, 0.5, 0.6)));
+
+        // Lesen verboten, Ersetzen erlaubt: z. B. ein Virenscanner, der die Datei gerade prüft
+        using (new FileStream(BildInfoSpeicher.PfadFuer(foto.FullName), FileMode.Open, FileAccess.Read, FileShare.Write | FileShare.Delete))
+        {
+            await Gesichtserkennung.ErgaenzeFehlendeAsync([foto]);
+        }
+
+        Assert.Equal(new Ausschnitt(0.4, 0.5, 0.6), BildInfoSpeicher.Lade(foto.FullName)?.Manuell);
+    }
 }
