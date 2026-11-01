@@ -6,7 +6,9 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
+    <!-- Hält die eigenständige exe klein (u. a. wegen der Windows-SDK-Projektion für die Gesichtserkennung) -->
+    <EnableCompressionInSingleFile Condition="'$(SelfContained)' == 'true'">true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
