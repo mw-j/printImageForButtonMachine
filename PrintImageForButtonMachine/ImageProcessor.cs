@@ -13,9 +13,6 @@ namespace PrintImageForButtonMachine
     internal class ImageProcessor
     {
         private const double cmProInch = 2.54;
-        private const double SeitenBreiteCm = 21; // A4
-        private const double SeitenHoeheCm = 29.7;
-        private const double AbstandCm = 0.5;
         private const int VorschauDpi = 96; // genügt für die Bildschirmvorschau
         private const int DruckDpi = 300; // mehr bringt auch bei 600-dpi-Laserdruckern keinen sichtbaren Gewinn
         private TextBox _ueberwachungPfad;
@@ -149,9 +146,7 @@ namespace PrintImageForButtonMachine
 
         public int ErmittleAnzahlBilderProSeite()
         {
-            int anzahlSpalten = ErmittleAnzahlBilder(SeitenBreiteCm);
-            int anzahlZeilen = ErmittleAnzahlBilder(SeitenHoeheCm);
-            return anzahlSpalten * anzahlZeilen;
+            return new SeitenLayout(_groesse).BilderProSeite;
         }
 
         private static FileInfo[] LeseBilder(string ordnerPfad)
@@ -176,9 +171,9 @@ namespace PrintImageForButtonMachine
             vollstaendig = true;
             double groesseCm = _groesse;
             int groesseInPixel = InPixel(groesseCm, dpi);
-            Bitmap neuesBild = new Bitmap(InPixel(SeitenBreiteCm, dpi), InPixel(SeitenHoeheCm, dpi));
+            Bitmap neuesBild = new Bitmap(InPixel(SeitenLayout.SeitenBreiteCm, dpi), InPixel(SeitenLayout.SeitenHoeheCm, dpi));
             neuesBild.SetResolution(dpi, dpi);
-            int anzahlBilderProZeile = ErmittleAnzahlBilder(SeitenBreiteCm);
+            var layout = new SeitenLayout(groesseCm);
             using (Graphics g = Graphics.FromImage(neuesBild)) {
                 // Weißer Hintergrund, da JPEG keine Transparenz kennt
                 g.Clear(Color.White);
@@ -198,8 +193,9 @@ namespace PrintImageForButtonMachine
                         continue;
                     }
                     // Position in cm berechnen und erst dann umrechnen, damit sich Rundungsfehler nicht aufsummieren
-                    int x = InPixel(AbstandCm + (i % anzahlBilderProZeile) * (groesseCm + AbstandCm), dpi);
-                    int y = InPixel(AbstandCm + (i / anzahlBilderProZeile) * (groesseCm + AbstandCm), dpi);
+                    RectangleF kreisCm = layout.KreisRechteckCm(i);
+                    int x = InPixel(kreisCm.X, dpi);
+                    int y = InPixel(kreisCm.Y, dpi);
                     ZeichneKreisausschnitt(g, image, new Rectangle(x, y, groesseInPixel, groesseInPixel));
                 }
             };
@@ -279,11 +275,6 @@ namespace PrintImageForButtonMachine
             using TextureBrush brush = new TextureBrush(skaliert);
             brush.TranslateTransform(zielRechteck.X, zielRechteck.Y);
             ziel.FillEllipse(brush, zielRechteck);
-        }
-
-        private int ErmittleAnzahlBilder(double p_verfügbareLängeCm)
-        {
-            return (int)((p_verfügbareLängeCm - AbstandCm) / (AbstandCm + _groesse));
         }
 
         private static int InPixel(double cm, int dpi)
