@@ -42,6 +42,12 @@ namespace PrintImageForButtonMachine
         /// </summary>
         public bool BearbeitungOffen { get; set; }
 
+        /// <summary>
+        /// Eine Seite wird aufbereitet und gedruckt; Argument ist die Anzahl der Fotos.
+        /// </summary>
+        public event EventHandler<int>? DruckGestartet;
+        public event EventHandler? DruckBeendet;
+
         public ImageProcessor(TextBox p_UeberwachungPfad, TextBox p_ausgabePfad, double p_Faktor, double p_Groesse, PictureBox p_PictureBox, Label labelAktualisiert, ComboBox comboBox)
         {
             _ueberwachungPfad = p_UeberwachungPfad;
@@ -73,10 +79,13 @@ namespace PrintImageForButtonMachine
         {
             if (_beschaeftigt) return;
             _beschaeftigt = true;
+            bool druckGestartet = false;
             try
             {
                 FileInfo[] files = LeseBilder(UeberwachungPfad);
                 if (files.Length == 0) return;
+                DruckGestartet?.Invoke(this, files.Length);
+                druckGestartet = true;
                 await Gesichtserkennung.ErgaenzeFehlendeAsync(files);
 
                 // verschiebe Dateien in eigenen Ordner
@@ -104,12 +113,13 @@ namespace PrintImageForButtonMachine
                     bild.Save(printPath, ImageFormat.Jpeg);
                     return bild;
                 });
-                DruckeBild(neuesBild);
+                await DruckeBildAsync(neuesBild);
                 _vorschauSignatur = null;
             }
             finally
             {
                 _beschaeftigt = false;
+                if (druckGestartet) DruckBeendet?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -252,26 +262,12 @@ namespace PrintImageForButtonMachine
             return neuesBild;
         }
 
-        private void DruckeBild(Image bild) {
+        private async Task DruckeBildAsync(Image bild) {
+            string drucker = _comboBox.Text;
             try
             {
-                using var printDocument = new PrintDocument();
-                printDocument.PrinterSettings.PrinterName = _comboBox.Text;
-                printDocument.DefaultPageSettings.Landscape = false;
-                printDocument.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-
-                printDocument.PrintPage += (sender, args) =>
-                {
-                    if (args.Graphics == null) return;
-                    // Beim Drucker entspricht GraphicsUnit.Display 1/100 Zoll; das Bild wird in seiner physischen Größe platziert
-                    args.Graphics.PageUnit = GraphicsUnit.Display;
-                    args.Graphics.PageScale = 1;
-                    args.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    float breite = bild.Width / bild.HorizontalResolution * 100f;
-                    float hoehe = bild.Height / bild.VerticalResolution * 100f;
-                    args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, breite, hoehe);
-                };
-                printDocument.Print();
+                // Das Übergeben an den Druckerspooler dauert und würde sonst die Oberfläche samt Druckanzeige einfrieren
+                await Task.Run(() => Drucke(bild, drucker));
             }
             catch (InvalidPrinterException) {
                 MessageBox.Show("Der angegebene Drucker ist nicht erreichbar. Die Datei liegt im entsprechenden Ausgabeordner und kann manuell gedruckt werden.", "Fehler beim Drucken", MessageBoxButtons.OK);
@@ -280,7 +276,27 @@ namespace PrintImageForButtonMachine
             {
                 MessageBox.Show("Es ist ein Fehler beim Drucken aufgetreten. Die Datei liegt im entsprechenden Ausgabeordner und kann manuell gedruckt werden.", "Fehler beim Drucken", MessageBoxButtons.OK);
             }
+        }
 
+        private static void Drucke(Image bild, string drucker)
+        {
+            using var printDocument = new PrintDocument();
+            printDocument.PrinterSettings.PrinterName = drucker;
+            printDocument.DefaultPageSettings.Landscape = false;
+            printDocument.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+
+            printDocument.PrintPage += (sender, args) =>
+            {
+                if (args.Graphics == null) return;
+                // Beim Drucker entspricht GraphicsUnit.Display 1/100 Zoll; das Bild wird in seiner physischen Größe platziert
+                args.Graphics.PageUnit = GraphicsUnit.Display;
+                args.Graphics.PageScale = 1;
+                args.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                float breite = bild.Width / bild.HorizontalResolution * 100f;
+                float hoehe = bild.Height / bild.VerticalResolution * 100f;
+                args.Graphics.DrawImage(bild, -args.PageSettings.HardMarginX, -args.PageSettings.HardMarginY, breite, hoehe);
+            };
+            printDocument.Print();
         }
 
         /// <summary>

@@ -9,6 +9,8 @@ namespace WinFormsApp1
     {
         private ImageProcessor processor;
         private ImageChecker checker;
+        private readonly ProgressBar _druckFortschritt = new() { Style = ProgressBarStyle.Marquee, Size = new Size(180, 10), Visible = false };
+        private int? _druckAnzahl; // gesetzt, solange eine Seite gedruckt wird
 
         public Form1()
         {
@@ -16,6 +18,10 @@ namespace WinFormsApp1
             processor = new ImageProcessor(textBox_ueberwachung, textBox_ausgabe, (double)num_faktor.Value, (double)num_groesse.Value, pictureBox1, label_Uhrzeit, comboBox_drucker);
             checker = new ImageChecker(processor);
             checker.Gestoppt += (sender, e) => DeAktiviereInputs(true);
+            processor.DruckGestartet += (sender, anzahl) => ZeigeDruck(anzahl);
+            processor.DruckBeendet += (sender, e) => ZeigeDruck(null);
+            pictureBox1.Controls.Add(_druckFortschritt);
+            pictureBox1.Paint += pictureBox1_Paint;
             textBox_ueberwachung.DataBindings.Add("Text", processor, "UeberwachungPfad");
             textBox_ausgabe.DataBindings.Add("Text", processor, "AusgabePfad");
             num_faktor.DataBindings.Add("Value", processor, "Faktor");
@@ -55,6 +61,34 @@ namespace WinFormsApp1
         {
             checker.stopCheck();
             base.OnFormClosing(e);
+        }
+
+        /// <param name="anzahl">Anzahl der Fotos, die gedruckt werden; null, wenn der Druck beendet ist.</param>
+        private void ZeigeDruck(int? anzahl)
+        {
+            _druckAnzahl = anzahl;
+            bool frei = anzahl == null;
+            btn_startStop.Enabled = frei;
+            btn_print.Enabled = frei;
+            button1.Enabled = frei;
+            btn_print.Text = frei ? "Jetzt drucken" : "Seite wird gedruckt …";
+            UseWaitCursor = !frei;
+            _druckFortschritt.Location = new Point((pictureBox1.ClientSize.Width - _druckFortschritt.Width) / 2, pictureBox1.ClientSize.Height / 2);
+            _druckFortschritt.Visible = !frei;
+            pictureBox1.Invalidate();
+        }
+
+        private void pictureBox1_Paint(object? sender, PaintEventArgs e)
+        {
+            if (_druckAnzahl is not int anzahl) return;
+            Rectangle flaeche = pictureBox1.ClientRectangle;
+            using var schleier = new SolidBrush(Color.FromArgb(210, Color.White));
+            e.Graphics.FillRectangle(schleier, flaeche);
+            using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            int mitte = flaeche.Height / 2;
+            using var titel = new Font(Font.FontFamily, 11f, FontStyle.Bold);
+            e.Graphics.DrawString("Seite wird gedruckt …", titel, Brushes.Black, new RectangleF(0, mitte - 40, flaeche.Width, 30), format);
+            e.Graphics.DrawString($"{anzahl} Bilder werden aufbereitet", Font, Brushes.Black, new RectangleF(0, mitte + 15, flaeche.Width, 25), format);
         }
 
         private void DeAktiviereInputs(bool wert)
