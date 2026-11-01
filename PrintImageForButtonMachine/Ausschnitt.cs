@@ -47,6 +47,15 @@ namespace PrintImageForButtonMachine
         }
 
         /// <summary>
+        /// Handkorrektur hat Vorrang; automatische Ausschnitte folgen den aktuellen Einstellungen.
+        /// </summary>
+        public static Ausschnitt Waehle(BildInfo? info, int breite, int hoehe, double faktor, double durchmesserCm)
+        {
+            if (info?.Manuell != null) return Begrenze(info.Manuell, breite, hoehe);
+            return Automatisch(breite, hoehe, info?.Gesichter ?? [], faktor, durchmesserCm);
+        }
+
+        /// <summary>
         /// Hält den Ausschnitt vollständig im Bild, damit der Kreis nie einen leeren Rand bekommt.
         /// </summary>
         public static Ausschnitt Begrenze(Ausschnitt a, int breite, int hoehe)
