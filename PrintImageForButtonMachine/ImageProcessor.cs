@@ -186,7 +186,7 @@ namespace PrintImageForButtonMachine
                 }
                 for (int i = 0; i < dateien.Length; i++)
                 {
-                    using Image? image = LadeBild(dateien[i].FullName);
+                    using Image? image = BildLader.LadeBild(dateien[i].FullName);
                     if (image == null)
                     {
                         vollstaendig = false;
@@ -201,23 +201,6 @@ namespace PrintImageForButtonMachine
             };
 
             return neuesBild;
-        }
-
-        /// <summary>
-        /// Lädt das Bild vollständig in den Speicher, damit die Datei nicht für die Dauer der Verarbeitung gesperrt bleibt.
-        /// Liefert null, wenn die Datei (noch) nicht gelesen werden kann.
-        /// </summary>
-        private static Image? LadeBild(string pfad)
-        {
-            try
-            {
-                // Der MemoryStream muss so lange leben wie das Bild; er hält keine nativen Ressourcen
-                return Image.FromStream(new MemoryStream(File.ReadAllBytes(pfad)));
-            }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is OutOfMemoryException)
-            {
-                return null;
-            }
         }
 
         private void DruckeBild(Image bild) {
